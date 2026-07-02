@@ -3,6 +3,12 @@
 import { create } from "zustand";
 import { signOut as nextAuthSignOut } from "next-auth/react";
 
+// SECURITY NOTE: Session tokens are stored in localStorage rather than httpOnly cookies
+// because the API (port 3001) and web app (port 3000) are on different origins.
+// This is a known XSS vector. If consolidating to a single origin in the future,
+// migrate session management to httpOnly cookies.
+// Mitigations: Keep CSP headers strict, avoid inline scripts, sanitize all user-rendered content.
+
 interface SessionData {
   id: string;
   name: string | null;
