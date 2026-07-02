@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { ArrowRight, Clock, Target, Trophy } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
-import { LoadingPanel } from "@/components/app/loading-panel";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -26,9 +25,29 @@ export default function DashboardPage() {
   const isError = profileError || tracksError || leaderboardError || statsError;
   const firstError = profileErrorObj || tracksErrorObj || leaderboardErrorObj || statsErrorObj;
 
-  if (isError) return <p>Something went wrong: {firstError?.message}</p>;
-  if (isLoading) return <LoadingPanel />;
-  if (!profile || !tracks || !leaderboard || !stats) return <p>No data found.</p>;
+  if (isError) return (
+    <div role="alert" className="rounded-md bg-destructive/10 p-6 text-center">
+      <p className="font-medium text-destructive">Failed to load content</p>
+      <p className="mt-2 text-sm text-muted-foreground">
+        Please try refreshing the page. If the issue persists, contact support.
+      </p>
+    </div>
+  );
+  if (isLoading) return (
+    <div role="status" aria-label="Loading dashboard" className="space-y-6">
+      <div className="grid gap-4 md:grid-cols-3">
+        {Array.from({ length: 3 }, (_, i) => (
+          <div key={i} className="h-32 animate-pulse rounded-lg bg-primary/10" />
+        ))}
+      </div>
+      <span className="sr-only">Loading...</span>
+    </div>
+  );
+  if (!profile || !tracks || !leaderboard || !stats) return (
+    <div role="status" className="rounded-md bg-muted/10 p-6 text-center">
+      <p className="font-medium text-muted-foreground">Complete your first module to see stats here</p>
+    </div>
+  );
 
   const activeTrack = tracks?.[0] ?? null;
   const userRank = leaderboard?.findIndex((entry) => entry.userId === profile?.id) ?? -1;

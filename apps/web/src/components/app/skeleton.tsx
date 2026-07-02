@@ -2,7 +2,12 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 /** Base skeleton block with animate-pulse */
 export function Skeleton({ className = "" }: { className?: string }) {
-  return <div className={`animate-pulse rounded-md bg-primary/20 ${className}`} />;
+  return (
+    <div
+      className={`animate-pulse rounded-md bg-primary/20 ${className}`}
+      aria-hidden="true"
+    />
+  );
 }
 
 /** Multiline text skeleton */
@@ -43,7 +48,7 @@ export function SkeletonStatCard({ className = "" }: { className?: string }) {
         </div>
       </CardHeader>
       <CardContent>
-        <Skeleton className="h-8 w-20" />
+        <Skeleton className="h-9 w-20" />
         <Skeleton className="mt-1 h-3 w-24" />
       </CardContent>
     </Card>

@@ -2,7 +2,7 @@ import { Skeleton, SkeletonCard } from "@/components/app/skeleton";
 
 export default function ModuleLoading() {
   return (
-    <div className="space-y-6">
+    <div role="status" aria-label="Page content is loading" className="space-y-6">
       {/* PageHeader skeleton */}
       <div className="space-y-2">
         <Skeleton className="h-4 w-20" />
@@ -18,6 +18,7 @@ export default function ModuleLoading() {
         </div>
         <SkeletonCard />
       </div>
+      <span className="sr-only">Loading...</span>
     </div>
   );
 }

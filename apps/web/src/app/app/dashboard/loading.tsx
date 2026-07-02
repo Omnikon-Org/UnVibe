@@ -2,7 +2,7 @@ import { Skeleton, SkeletonCard, SkeletonStatCard } from "@/components/app/skele
 
 export default function DashboardLoading() {
   return (
-    <div className="space-y-6">
+    <div role="status" aria-label="Page content is loading" className="space-y-6">
       {/* PageHeader skeleton */}
       <div className="space-y-2">
         <Skeleton className="h-4 w-20" />
@@ -28,6 +28,7 @@ export default function DashboardLoading() {
         <SkeletonCard />
         <SkeletonCard />
       </div>
+      <span className="sr-only">Loading...</span>
     </div>
   );
 }

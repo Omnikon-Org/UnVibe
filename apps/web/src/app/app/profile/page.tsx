@@ -1,7 +1,6 @@
 "use client";
 
 import { PageHeader } from "@/components/app/page-header";
-import { LoadingPanel } from "@/components/app/loading-panel";
 import { IRSRadarChart } from "@/components/features/irs-radar-chart";
 import { StreakTracker } from "@/components/features/streak-tracker";
 import { Badge } from "@/components/ui/badge";
@@ -20,9 +19,28 @@ export default function ProfilePage() {
   const isError = profileError || recentError || statsError;
   const firstError = profileErrorObj || recentErrorObj || statsErrorObj;
 
-  if (isError) return <p>Something went wrong: {firstError?.message}</p>;
-  if (isLoading) return <LoadingPanel label="Loading profile" />;
-  if (!profile) return <p>No data found.</p>;
+  if (isError) return (
+    <div role="alert" className="rounded-md bg-destructive/10 p-6 text-center">
+      <p className="font-medium text-destructive">Failed to load content</p>
+      <p className="mt-2 text-sm text-muted-foreground">
+        Please try refreshing the page. If the issue persists, contact support.
+      </p>
+    </div>
+  );
+  if (isLoading) return (
+    <div role="status" aria-label="Loading profile" className="space-y-6">
+      <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
+        <div className="h-64 animate-pulse rounded-lg bg-primary/10" />
+        <div className="h-64 animate-pulse rounded-lg bg-primary/10" />
+      </div>
+      <span className="sr-only">Loading...</span>
+    </div>
+  );
+  if (!profile) return (
+    <div role="status" className="rounded-md bg-muted/10 p-6 text-center">
+      <p className="font-medium text-muted-foreground">Profile data is not available yet.</p>
+    </div>
+  );
 
   return (
     <>

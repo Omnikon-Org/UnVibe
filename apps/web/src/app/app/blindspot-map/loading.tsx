@@ -1,8 +1,8 @@
 import { Skeleton, SkeletonCard } from "@/components/app/skeleton";
 
-export default function TrackDetailLoading() {
+export default function BlindspotMapLoading() {
   return (
-    <div className="space-y-6">
+    <div role="status" aria-label="Page content is loading" className="space-y-6">
       {/* PageHeader skeleton */}
       <div className="space-y-2">
         <Skeleton className="h-4 w-20" />
@@ -10,12 +10,13 @@ export default function TrackDetailLoading() {
         <Skeleton className="h-4 w-96" />
       </div>
 
-      {/* Track content skeleton */}
-      <div className="grid gap-4 lg:grid-cols-3">
+      {/* Blindspot cards skeleton */}
+      <div className="grid gap-4">
         <SkeletonCard />
         <SkeletonCard />
         <SkeletonCard />
       </div>
+      <span className="sr-only">Loading...</span>
     </div>
   );
 }
