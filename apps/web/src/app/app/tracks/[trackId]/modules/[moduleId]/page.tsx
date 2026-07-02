@@ -5,14 +5,13 @@ import { ModulePlayer } from "@/components/features/module-player";
 import { trpc } from "@/lib/trpc/client";
 
 export default function ModulePage({ params }: { params: { trackId: string; moduleId: string } }) {
-  const { data: trackData, isLoading: trackLoading, isError: trackError, error: trackErrorObj } =
+  const { data: trackData, isLoading: trackLoading, isError: trackError } =
     trpc.tracks.getById.useQuery({ id: params.trackId });
-  const { data: dbModule, isLoading: moduleLoading, isError: moduleError, error: moduleErrorObj } =
+  const { data: dbModule, isLoading: moduleLoading, isError: moduleError } =
     trpc.modules.getById.useQuery({ id: params.moduleId });
 
   const isLoading = trackLoading || moduleLoading;
   const isError = trackError || moduleError;
-  const firstError = trackErrorObj || moduleErrorObj;
 
   if (isError) return (
     <div role="alert" className="rounded-md bg-destructive/10 p-6 text-center">

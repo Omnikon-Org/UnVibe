@@ -8,16 +8,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc/client";
 
 export default function ProfilePage() {
-  const { data: profile, isLoading: profileLoading, isError: profileError, error: profileErrorObj } =
+  const { data: profile, isLoading: profileLoading, isError: profileError } =
     trpc.profile.getProfile.useQuery();
-  const { data: recentData, isLoading: recentLoading, isError: recentError, error: recentErrorObj } =
+  const { data: recentData, isLoading: recentLoading, isError: recentError } =
     trpc.profile.getRecent.useQuery({ limit: 5 });
-  const { data: stats, isLoading: statsLoading, isError: statsError, error: statsErrorObj } =
+  const { data: stats, isLoading: statsLoading, isError: statsError } =
     trpc.profile.getStats.useQuery();
 
   const isLoading = profileLoading || recentLoading || statsLoading;
   const isError = profileError || recentError || statsError;
-  const firstError = profileErrorObj || recentErrorObj || statsErrorObj;
 
   if (isError) return (
     <div role="alert" className="rounded-md bg-destructive/10 p-6 text-center">

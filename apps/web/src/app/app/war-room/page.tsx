@@ -6,14 +6,13 @@ import { WarRoomLive } from "@/components/features/war-room-live";
 import { trpc } from "@/lib/trpc/client";
 
 export default function WarRoomPage() {
-  const { data: room, isLoading: roomLoading, isError: roomError, error: roomErrorObj } =
+  const { data: room, isLoading: roomLoading, isError: roomError } =
     trpc.warRoom.getRoom.useQuery();
-  const { data: leaderboard, isLoading: leaderboardLoading, isError: leaderboardError, error: leaderboardErrorObj } =
+  const { data: leaderboard, isLoading: leaderboardLoading, isError: leaderboardError } =
     trpc.warRoom.getLeaderboard.useQuery();
 
   const isLoading = roomLoading || leaderboardLoading;
   const isError = roomError || leaderboardError;
-  const firstError = roomErrorObj || leaderboardErrorObj;
 
   if (isError) return (
     <div role="alert" className="rounded-md bg-destructive/10 p-6 text-center">

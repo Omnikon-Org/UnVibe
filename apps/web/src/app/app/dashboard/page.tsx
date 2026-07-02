@@ -12,18 +12,17 @@ import { Leaderboard } from "@/components/features/leaderboard";
 import { StreakTracker } from "@/components/features/streak-tracker";
 
 export default function DashboardPage() {
-  const { data: profile, isLoading: profileLoading, isError: profileError, error: profileErrorObj } =
+  const { data: profile, isLoading: profileLoading, isError: profileError } =
     trpc.profile.getProfile.useQuery();
-  const { data: tracks, isLoading: tracksLoading, isError: tracksError, error: tracksErrorObj } =
+  const { data: tracks, isLoading: tracksLoading, isError: tracksError } =
     trpc.tracks.getAll.useQuery();
-  const { data: leaderboard, isLoading: leaderboardLoading, isError: leaderboardError, error: leaderboardErrorObj } =
+  const { data: leaderboard, isLoading: leaderboardLoading, isError: leaderboardError } =
     trpc.warRoom.getLeaderboard.useQuery();
-  const { data: stats, isLoading: statsLoading, isError: statsError, error: statsErrorObj } =
+  const { data: stats, isLoading: statsLoading, isError: statsError } =
     trpc.profile.getStats.useQuery();
 
   const isLoading = profileLoading || tracksLoading || leaderboardLoading || statsLoading;
   const isError = profileError || tracksError || leaderboardError || statsError;
-  const firstError = profileErrorObj || tracksErrorObj || leaderboardErrorObj || statsErrorObj;
 
   if (isError) return (
     <div role="alert" className="rounded-md bg-destructive/10 p-6 text-center">
