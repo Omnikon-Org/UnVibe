@@ -102,6 +102,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             );
           })}
         </nav>
+        <footer className="hidden border-t border-border px-6 py-4 text-xs text-muted-foreground lg:ml-64 lg:block">
+          <div className="mx-auto flex max-w-7xl items-center justify-between">
+            <span>UnVibe v0.1</span>
+            <nav className="flex gap-4">
+              <Link href="/app/dashboard" className="transition hover:text-foreground">Dashboard</Link>
+              <Link href="/app/tracks" className="transition hover:text-foreground">Tracks</Link>
+            </nav>
+            <span>© {new Date().getFullYear()} UnVibe</span>
+          </div>
+        </footer>
       </div>
     </div>
   );

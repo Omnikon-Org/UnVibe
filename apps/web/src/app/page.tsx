@@ -71,11 +71,11 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div className="rounded-lg border border-border bg-card/90 p-4 shadow-2xl shadow-black/20 backdrop-blur">
+          <div className="rounded-lg border border-border bg-card p-4 shadow-lg shadow-black/10">
             <div className="mb-4 flex items-center justify-between border-b border-border pb-3">
               <div>
                 <p className="font-mono text-xs uppercase tracking-[0.22em] text-muted-foreground">
-                  live module
+                  sample module
                 </p>
                 <h2 className="font-semibold">Auth guard rebuild</h2>
               </div>
@@ -128,6 +128,15 @@ export default function LandingPage() {
           })}
         </div>
       </section>
+      <footer className="border-t border-border px-6 py-5 text-xs text-muted-foreground">
+        <div className="mx-auto flex max-w-7xl items-center justify-between">
+          <span>UnVibe v0.1</span>
+          <nav className="flex gap-4">
+            <a href="https://github.com/yuvr305/unvibe" className="transition hover:text-foreground">GitHub</a>
+          </nav>
+          <span>© {new Date().getFullYear()} UnVibe</span>
+        </div>
+      </footer>
     </main>
   );
 }

@@ -52,12 +52,6 @@ export default function DashboardPage() {
   const userRank = leaderboard?.findIndex((entry) => entry.userId === profile?.id) ?? -1;
   const rankDisplay = userRank >= 0 ? `#${userRank + 1}` : "--";
 
-  const statCards = [
-    { label: "IRS", value: profile?.irs ?? 0, copy: "Irreplaceability score", icon: Trophy },
-    { label: "Rank", value: rankDisplay, copy: "War Room placement", icon: Target },
-    { label: "Focus", value: "34m", copy: "Next module estimate", icon: Clock },
-  ];
-
   const leaderboardEntries = (leaderboard ?? []).map((entry) => ({
     id: entry.userId,
     name: entry.name,
@@ -87,24 +81,42 @@ export default function DashboardPage() {
           </Button>
         }
       />
-      <div className="grid gap-4 md:grid-cols-3">
-        {statCards.map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <Card key={stat.label}>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  {stat.label}
-                  <Icon className="h-4 w-4 text-primary" />
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-semibold">{stat.value}</p>
-                <p className="mt-1 text-sm text-muted-foreground">{stat.copy}</p>
-              </CardContent>
-            </Card>
-          );
-        })}
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              IRS <Trophy className="h-4 w-4 text-primary" />
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-semibold">{profile?.irs ?? 0}</p>
+            <p className="mt-1 text-sm text-muted-foreground">Irreplaceability score</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              Rank <Target className="h-4 w-4 text-primary" />
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-semibold">{rankDisplay}</p>
+            <p className="mt-1 text-sm text-muted-foreground">War Room placement</p>
+          </CardContent>
+        </Card>
+        <div className="col-span-full mt-1 sm:col-span-1 sm:mt-0">
+          <Card className="border-accent/40 bg-accent/[0.03]">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                Next <Clock className="h-4 w-4 text-accent" />
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-semibold">34m</p>
+              <p className="mt-1 text-sm text-muted-foreground">Estimated module time</p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
       <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_360px]">
         <Card>
