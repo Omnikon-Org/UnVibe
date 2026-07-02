@@ -69,16 +69,18 @@ export default function SignUpPage() {
             Sign up with Google
           </Button>
           <div className="grid gap-2 pt-3">
-            <Input placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} />
+            <Input placeholder="Your name" maxLength={100} value={name} onChange={(e) => setName(e.target.value)} />
             <Input
               placeholder="email@company.com"
               type="email"
+              maxLength={255}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
             <Input
               placeholder="Password (min 6 characters)"
               type="password"
+              maxLength={128}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />

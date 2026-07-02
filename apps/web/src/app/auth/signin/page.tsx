@@ -67,12 +67,14 @@ export default function SignInPage() {
             <Input
               placeholder="email@company.com"
               type="email"
+              maxLength={255}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
             <Input
               placeholder="Password"
               type="password"
+              maxLength={128}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
