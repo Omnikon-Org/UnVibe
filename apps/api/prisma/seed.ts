@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
@@ -71,6 +72,7 @@ async function main() {
       name: "Demo User",
       email: "demo@unvibe.dev",
       image: null,
+      passwordHash: await bcrypt.hash("demo1234", 10),
     },
   });
 
