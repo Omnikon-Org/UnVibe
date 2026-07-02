@@ -1,6 +1,9 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { publicProcedure, protectedProcedure, router } from "../trpc";
+import pino from "pino";
+
+const logger = pino({ name: "modules-router" });
 
 export const modulesRouter = router({
   getById: publicProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
@@ -33,6 +36,14 @@ export const modulesRouter = router({
       });
       if (!module) throw new TRPCError({ code: "NOT_FOUND", message: "Module not found" });
 
+      // Check for existing pending submission
+      const existingPending = await ctx.prisma.submission.findFirst({
+        where: { userId: ctx.session.user.id, moduleId: input.moduleId, status: "pending" },
+      });
+      if (existingPending) {
+        throw new TRPCError({ code: "CONFLICT", message: "You already have a pending submission for this module. Please wait for it to be scored." });
+      }
+
       // Create a submission with pending status
       const submission = await ctx.prisma.submission.create({
         data: {
@@ -43,15 +54,20 @@ export const modulesRouter = router({
         },
       });
 
-      // Enqueue to BullMQ if the queue is available
+      // Enqueue to BullMQ if the queue is available — best-effort
       if (ctx.submissionQueue) {
-        await ctx.submissionQueue.add("process-submission", {
-          submissionId: submission.id,
-          userId: ctx.session.user.id,
-          moduleId: input.moduleId,
-          code: input.code,
-          originalCode: module.content,
-        });
+        try {
+          await ctx.submissionQueue.add("process-submission", {
+            submissionId: submission.id,
+            userId: ctx.session.user.id,
+            moduleId: input.moduleId,
+            code: input.code,
+            originalCode: module.content,
+          });
+        } catch (err) {
+          // Queue failed — submission remains as pending orphan
+          logger.error({ err, submissionId: submission.id }, "Failed to enqueue submission");
+        }
       }
 
       return { submissionId: submission.id, status: submission.status };

@@ -1,6 +1,10 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, router } from "../trpc";
+import type { Prisma } from "@prisma/client";
+import pino from "pino";
+
+const logger = pino({ name: "submissions-router" });
 
 export const submissionsRouter = router({
   create: protectedProcedure
@@ -20,6 +24,14 @@ export const submissionsRouter = router({
       });
       if (!module) throw new TRPCError({ code: "NOT_FOUND", message: "Module not found" });
 
+      // Check for existing pending submission
+      const existingPending = await ctx.prisma.submission.findFirst({
+        where: { userId, moduleId: input.moduleId, status: "pending" },
+      });
+      if (existingPending) {
+        throw new TRPCError({ code: "CONFLICT", message: "You already have a pending submission for this module. Please wait for it to be scored." });
+      }
+
       // Create submission with pending status
       const submission = await ctx.prisma.submission.create({
         data: {
@@ -30,16 +42,21 @@ export const submissionsRouter = router({
         },
       });
 
-      // Enqueue to BullMQ for async scoring
+      // Enqueue to BullMQ for async scoring — best-effort, clean up on failure
       if (ctx.submissionQueue) {
-        await ctx.submissionQueue.add("process-submission", {
-          submissionId: submission.id,
-          userId,
-          moduleId: input.moduleId,
-          code: input.code,
-          originalCode: input.originalCode ?? module.content,
-          language: "typescript",
-        });
+        try {
+          await ctx.submissionQueue.add("process-submission", {
+            submissionId: submission.id,
+            userId,
+            moduleId: input.moduleId,
+            code: input.code,
+            originalCode: input.originalCode ?? module.content,
+            language: "typescript",
+          });
+        } catch (err) {
+          // Queue failed — submission remains as pending orphan
+          logger.error({ err, submissionId: submission.id }, "Failed to enqueue submission");
+        }
       }
 
       return {
@@ -60,7 +77,7 @@ export const submissionsRouter = router({
     )
     .query(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
-      const where: Record<string, unknown> = { userId };
+      const where: Prisma.SubmissionWhereInput = { userId };
       if (input?.moduleId) where.moduleId = input.moduleId;
 
       const submissions = await ctx.prisma.submission.findMany({
