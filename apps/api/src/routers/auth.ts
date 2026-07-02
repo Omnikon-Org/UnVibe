@@ -3,6 +3,7 @@ import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { TRPCError } from "@trpc/server";
 import { publicProcedure, protectedProcedure, router } from "../trpc";
+import { setSessionCookie, clearSessionCookie } from "../context";
 
 function generateSessionToken(): string {
   return randomBytes(32).toString("hex");
@@ -41,6 +42,9 @@ export const authRouter = router({
         },
       });
 
+      // Set httpOnly session cookie (mitigates XSS vector WR-07)
+      setSessionCookie(ctx.res, sessionToken);
+
       return { user, sessionToken };
     }),
 
@@ -75,6 +79,9 @@ export const authRouter = router({
           expires: createSessionExpiry(),
         },
       });
+
+      // Set httpOnly session cookie (mitigates XSS vector WR-07)
+      setSessionCookie(ctx.res, sessionToken);
 
       return { user, sessionToken };
     }),
@@ -140,6 +147,9 @@ export const authRouter = router({
         },
       });
 
+      // Set httpOnly session cookie (mitigates XSS vector WR-07)
+      setSessionCookie(ctx.res, sessionToken);
+
       return { user, sessionToken };
     }),
 
@@ -153,6 +163,8 @@ export const authRouter = router({
         where: { sessionToken: ctx.session.sessionToken },
       });
     }
+    // Clear the httpOnly session cookie
+    clearSessionCookie(ctx.res);
     return { success: true };
   }),
 });

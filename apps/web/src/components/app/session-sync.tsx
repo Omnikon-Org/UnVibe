@@ -5,13 +5,19 @@ import { useSession } from "next-auth/react";
 import { useAuthStore } from "@/stores/auth-store";
 import { trpc } from "@/lib/trpc/client";
 
+const USER_CACHE_KEY = "unvibe_user_cache";
+
 /**
  * Bridges NextAuth OAuth sessions to the auth-store / API session system.
  *
  * After a user signs in via GitHub/Google, NextAuth sets a JWT cookie
  * and redirects to the dashboard. This component detects the NextAuth
- * session, creates a DB session via the tRPC API, and stores it in
- * the auth-store so all subsequent API calls work.
+ * session, creates a DB session via the tRPC API (which sets an httpOnly
+ * cookie), and caches user profile data in the auth-store.
+ *
+ * The session token itself never touches localStorage — it's only in the
+ * httpOnly cookie. User profile data is cached in localStorage for fast
+ * initial render (not sensitive — no token).
  *
  * Place this near the root of the app (inside the SessionProvider).
  */
@@ -19,7 +25,6 @@ export function SessionSync() {
   const { data: session, status } = useSession();
   const { user: authUser, signOut: clearLocal } = useAuthStore();
   const synced = useRef(false);
-  const authMethod = useRef<string | null>(null);
 
   const linkMutation = trpc.auth.linkOAuth.useMutation();
 
@@ -56,18 +61,22 @@ export function SessionSync() {
         },
         {
           onSuccess: (data) => {
-            if (data?.sessionToken && data?.user) {
-              const sessionData = {
+            // Session token is set as httpOnly cookie by the API — not stored in JS
+            if (data?.user) {
+              useAuthStore.setState({
+                user: {
+                  id: data.user.id,
+                  name: data.user.name ?? null,
+                  email: data.user.email ?? null,
+                  image: data.user.image ?? null,
+                },
+              });
+              localStorage.setItem(USER_CACHE_KEY, JSON.stringify({
                 id: data.user.id,
                 name: data.user.name ?? null,
                 email: data.user.email ?? null,
                 image: data.user.image ?? null,
-                sessionToken: data.sessionToken,
-              };
-              useAuthStore.setState({ user: sessionData });
-              localStorage.setItem("unvibe_session", JSON.stringify(sessionData));
-              authMethod.current = "oauth";
-              localStorage.setItem("unvibe_auth_method", "oauth");
+              }));
             }
           },
           onError: () => {
@@ -81,9 +90,9 @@ export function SessionSync() {
 
   // If OAuth session has ended but local session still exists, clear it
   useEffect(() => {
-    if (status === "unauthenticated" && authUser && localStorage.getItem("unvibe_auth_method") === "oauth") {
+    if (status === "unauthenticated" && authUser) {
       clearLocal();
-      localStorage.removeItem("unvibe_auth_method");
+      localStorage.removeItem(USER_CACHE_KEY);
     }
   }, [status, authUser, clearLocal]);
 
