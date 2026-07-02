@@ -102,17 +102,33 @@ export const profileRouter = router({
 
     const averageScore = scoreCount > 0 ? Math.round((totalScore / scoreCount) * 100) : 0;
 
-    // Streak calculation (days since last submission)
-    const lastSubmission = await ctx.prisma.submission.findFirst({
+    // Streak calculation - count consecutive days
+    const submissions = await ctx.prisma.submission.findMany({
       where: { userId },
       orderBy: { createdAt: "desc" },
       select: { createdAt: true },
     });
 
     let currentStreak = 0;
-    if (lastSubmission) {
-      const daysSince = Math.floor((Date.now() - lastSubmission.createdAt.getTime()) / (1000 * 60 * 60 * 24));
-      currentStreak = daysSince <= 1 ? 1 : 0;
+    const dates = new Set<string>();
+    for (const sub of submissions) {
+      const dateKey = sub.createdAt.toISOString().split("T")[0];
+      dates.add(dateKey);
+    }
+
+    const sortedDates = Array.from(dates).sort((a, b) => b.localeCompare(a));
+    if (sortedDates.length > 0) {
+      currentStreak = 1;
+      for (let i = 1; i < sortedDates.length; i++) {
+        const curr = new Date(sortedDates[i - 1]);
+        const prev = new Date(sortedDates[i]);
+        const diffDays = Math.round((curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24));
+        if (diffDays === 1) {
+          currentStreak++;
+        } else {
+          break;
+        }
+      }
     }
 
     return {
