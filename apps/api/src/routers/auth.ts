@@ -83,6 +83,55 @@ export const authRouter = router({
       return { user, sessionToken };
     }),
 
+  /**
+   * Creates a DB session for an OAuth-authenticated user.
+   * Called by the web app after NextAuth OAuth completes,
+   * bridging the OAuth session to the Express API's session system.
+   */
+  linkOAuth: publicProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        name: z.string().nullable(),
+        email: z.string().nullable(),
+        image: z.string().nullable(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Find or create the user from the OAuth provider data
+      let user = await ctx.prisma.user.findUnique({
+        where: { id: input.id },
+      });
+
+      if (!user) {
+        user = await ctx.prisma.user.findUnique({
+          where: { email: input.email ?? undefined },
+        });
+      }
+
+      if (!user) {
+        user = await ctx.prisma.user.create({
+          data: {
+            id: input.id,
+            name: input.name,
+            email: input.email,
+            image: input.image,
+          },
+        });
+      }
+
+      const sessionToken = generateSessionToken();
+      await ctx.prisma.session.create({
+        data: {
+          sessionToken,
+          userId: user.id,
+          expires: createSessionExpiry(),
+        },
+      });
+
+      return { user, sessionToken };
+    }),
+
   getSession: protectedProcedure.query(({ ctx }) => {
     return { user: ctx.session.user };
   }),

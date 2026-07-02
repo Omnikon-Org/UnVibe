@@ -55,11 +55,11 @@ export default function SignInPage() {
           <p className="text-sm text-muted-foreground">Enter your email to begin training.</p>
         </CardHeader>
         <CardContent className="space-y-3">
-          <Button className="w-full" variant="outline" onClick={() => oauthSignIn("github", { redirectTo: "/app/dashboard" })}>
+          <Button className="w-full" variant="outline" onClick={() => oauthSignIn("github", { callbackUrl: "/app/dashboard" })}>
             <Github className="h-4 w-4" />
             Continue with GitHub
           </Button>
-          <Button className="w-full" variant="outline" onClick={() => oauthSignIn("google", { redirectTo: "/app/dashboard" })}>
+          <Button className="w-full" variant="outline" onClick={() => oauthSignIn("google", { callbackUrl: "/app/dashboard" })}>
             <Mail className="h-4 w-4" />
             Continue with Google
           </Button>

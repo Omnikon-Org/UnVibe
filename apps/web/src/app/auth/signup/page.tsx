@@ -60,11 +60,11 @@ export default function SignUpPage() {
           <p className="text-sm text-muted-foreground">Enter your details to start training.</p>
         </CardHeader>
         <CardContent className="space-y-3">
-          <Button className="w-full" variant="outline" onClick={() => oauthSignIn("github", { redirectTo: "/app/dashboard" })}>
+          <Button className="w-full" variant="outline" onClick={() => oauthSignIn("github", { callbackUrl: "/app/dashboard" })}>
             <Github className="h-4 w-4" />
             Sign up with GitHub
           </Button>
-          <Button className="w-full" variant="outline" onClick={() => oauthSignIn("google", { redirectTo: "/app/dashboard" })}>
+          <Button className="w-full" variant="outline" onClick={() => oauthSignIn("google", { callbackUrl: "/app/dashboard" })}>
             <Mail className="h-4 w-4" />
             Sign up with Google
           </Button>

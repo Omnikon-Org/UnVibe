@@ -1,6 +1,7 @@
 "use client";
 
 import { create } from "zustand";
+import { signOut as nextAuthSignOut } from "next-auth/react";
 
 interface SessionData {
   id: string;
@@ -129,5 +130,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
     }
     set({ user: null });
     localStorage.removeItem("unvibe_session");
+    // Also clear the NextAuth session cookie (OAuth users)
+    await nextAuthSignOut({ redirect: false });
   },
 }));
