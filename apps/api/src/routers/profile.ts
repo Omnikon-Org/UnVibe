@@ -117,6 +117,7 @@ export const profileRouter = router({
     }
 
     const sortedDates = Array.from(dates).sort((a, b) => b.localeCompare(a));
+    const lastActiveDate: string | null = sortedDates.length > 0 ? sortedDates[0] : null;
     if (sortedDates.length > 0) {
       currentStreak = 1;
       for (let i = 1; i < sortedDates.length; i++) {
@@ -138,7 +139,7 @@ export const profileRouter = router({
       pendingCount,
       averageScore,
       currentStreak,
-      lastActive: lastSubmission?.createdAt ?? null,
+      lastActive: lastActiveDate ? new Date(lastActiveDate) : null,
     };
   }),
 });
