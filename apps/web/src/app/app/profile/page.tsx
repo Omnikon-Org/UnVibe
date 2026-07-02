@@ -9,13 +9,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc/client";
 
 export default function ProfilePage() {
-  const { data: profile, isLoading: profileLoading } = trpc.profile.getProfile.useQuery();
-  const { data: recentData } = trpc.profile.getRecent.useQuery({ limit: 5 });
-  const { data: stats } = trpc.profile.getStats.useQuery();
+  const { data: profile, isLoading: profileLoading, isError: profileError, error: profileErrorObj } =
+    trpc.profile.getProfile.useQuery();
+  const { data: recentData, isLoading: recentLoading, isError: recentError, error: recentErrorObj } =
+    trpc.profile.getRecent.useQuery({ limit: 5 });
+  const { data: stats, isLoading: statsLoading, isError: statsError, error: statsErrorObj } =
+    trpc.profile.getStats.useQuery();
 
-  const isLoading = profileLoading;
+  const isLoading = profileLoading || recentLoading || statsLoading;
+  const isError = profileError || recentError || statsError;
+  const firstError = profileErrorObj || recentErrorObj || statsErrorObj;
 
-  if (isLoading || !profile) return <LoadingPanel label="Loading profile" />;
+  if (isError) return <p>Something went wrong: {firstError?.message}</p>;
+  if (isLoading) return <LoadingPanel label="Loading profile" />;
+  if (!profile) return <p>No data found.</p>;
 
   return (
     <>

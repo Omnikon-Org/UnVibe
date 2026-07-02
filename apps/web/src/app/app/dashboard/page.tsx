@@ -13,12 +13,22 @@ import { Leaderboard } from "@/components/features/leaderboard";
 import { StreakTracker } from "@/components/features/streak-tracker";
 
 export default function DashboardPage() {
-  const { data: profile, isLoading: profileLoading } = trpc.profile.getProfile.useQuery();
-  const { data: tracks } = trpc.tracks.getAll.useQuery();
-  const { data: leaderboard } = trpc.warRoom.getLeaderboard.useQuery();
-  const { data: stats } = trpc.profile.getStats.useQuery();
+  const { data: profile, isLoading: profileLoading, isError: profileError, error: profileErrorObj } =
+    trpc.profile.getProfile.useQuery();
+  const { data: tracks, isLoading: tracksLoading, isError: tracksError, error: tracksErrorObj } =
+    trpc.tracks.getAll.useQuery();
+  const { data: leaderboard, isLoading: leaderboardLoading, isError: leaderboardError, error: leaderboardErrorObj } =
+    trpc.warRoom.getLeaderboard.useQuery();
+  const { data: stats, isLoading: statsLoading, isError: statsError, error: statsErrorObj } =
+    trpc.profile.getStats.useQuery();
 
-  if (profileLoading) return <LoadingPanel />;
+  const isLoading = profileLoading || tracksLoading || leaderboardLoading || statsLoading;
+  const isError = profileError || tracksError || leaderboardError || statsError;
+  const firstError = profileErrorObj || tracksErrorObj || leaderboardErrorObj || statsErrorObj;
+
+  if (isError) return <p>Something went wrong: {firstError?.message}</p>;
+  if (isLoading) return <LoadingPanel />;
+  if (!profile || !tracks || !leaderboard || !stats) return <p>No data found.</p>;
 
   const activeTrack = tracks?.[0] ?? null;
   const userRank = leaderboard?.findIndex((entry) => entry.userId === profile?.id) ?? -1;
@@ -46,8 +56,14 @@ export default function DashboardPage() {
         description="Mock data mirrors the future API shape while the backend catches up."
         action={
           <Button asChild>
-            <Link href="/app/tracks/frontend-systems/modules/auth-guard-rebuild">
-              Resume module
+            <Link
+              href={
+                activeTrack?.modules?.[0]
+                  ? `/app/tracks/${activeTrack.id}/modules/${activeTrack.modules[0].id}`
+                  : "/app/tracks"
+              }
+            >
+              {activeTrack?.modules?.[0] ? "Resume module" : "Browse tracks"}
               <ArrowRight className="h-4 w-4" />
             </Link>
           </Button>

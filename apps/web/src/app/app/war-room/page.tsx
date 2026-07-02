@@ -7,10 +7,18 @@ import { WarRoomLive } from "@/components/features/war-room-live";
 import { trpc } from "@/lib/trpc/client";
 
 export default function WarRoomPage() {
-  const { data: room, isLoading } = trpc.warRoom.getRoom.useQuery();
-  const { data: leaderboard } = trpc.warRoom.getLeaderboard.useQuery();
+  const { data: room, isLoading: roomLoading, isError: roomError, error: roomErrorObj } =
+    trpc.warRoom.getRoom.useQuery();
+  const { data: leaderboard, isLoading: leaderboardLoading, isError: leaderboardError, error: leaderboardErrorObj } =
+    trpc.warRoom.getLeaderboard.useQuery();
 
-  if (isLoading || !room) return <LoadingPanel label="Joining War Room" />;
+  const isLoading = roomLoading || leaderboardLoading;
+  const isError = roomError || leaderboardError;
+  const firstError = roomErrorObj || leaderboardErrorObj;
+
+  if (isError) return <p>Something went wrong: {firstError?.message}</p>;
+  if (isLoading) return <LoadingPanel label="Joining War Room" />;
+  if (!room) return <p>No data found.</p>;
 
   const leaderboardEntries = (leaderboard ?? []).map((entry) => ({
     id: entry.userId,

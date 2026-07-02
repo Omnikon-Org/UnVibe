@@ -6,12 +6,18 @@ import { ModulePlayer } from "@/components/features/module-player";
 import { trpc } from "@/lib/trpc/client";
 
 export default function ModulePage({ params }: { params: { trackId: string; moduleId: string } }) {
-  const { data: trackData, isLoading: trackLoading } = trpc.tracks.getById.useQuery({ id: params.trackId });
-  const { data: dbModule, isLoading: moduleLoading } = trpc.modules.getById.useQuery({ id: params.moduleId });
+  const { data: trackData, isLoading: trackLoading, isError: trackError, error: trackErrorObj } =
+    trpc.tracks.getById.useQuery({ id: params.trackId });
+  const { data: dbModule, isLoading: moduleLoading, isError: moduleError, error: moduleErrorObj } =
+    trpc.modules.getById.useQuery({ id: params.moduleId });
 
   const isLoading = trackLoading || moduleLoading;
+  const isError = trackError || moduleError;
+  const firstError = trackErrorObj || moduleErrorObj;
 
-  if (isLoading || !dbModule) return <LoadingPanel label="Loading module player" />;
+  if (isError) return <p>Something went wrong: {firstError?.message}</p>;
+  if (isLoading) return <LoadingPanel label="Loading module player" />;
+  if (!dbModule) return <p>No data found.</p>;
 
   const moduleForPlayer = {
     id: dbModule.id,
