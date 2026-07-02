@@ -1,4 +1,4 @@
-import { randomBytes } from "node:crypto";
+import { randomBytes, createHmac } from "node:crypto";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { TRPCError } from "@trpc/server";
@@ -24,16 +24,12 @@ export const authRouter = router({
       const user = await ctx.prisma.user.findUnique({
         where: { email: input.email },
       });
-      if (!user)
-        throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
-
-      if (user.passwordHash) {
-        const valid = await bcrypt.compare(input.password, user.passwordHash);
-        if (!valid)
-          throw new TRPCError({ code: "UNAUTHORIZED", message: "Invalid password" });
-      } else {
-        // OAuth-only user has no password set; cannot use email/password sign-in
-        throw new TRPCError({ code: "UNAUTHORIZED", message: "This account uses OAuth. Sign in with GitHub or Google." });
+      if (!user || !user.passwordHash) {
+        throw new TRPCError({ code: "UNAUTHORIZED", message: "Invalid email or password" });
+      }
+      const valid = await bcrypt.compare(input.password, user.passwordHash);
+      if (!valid) {
+        throw new TRPCError({ code: "UNAUTHORIZED", message: "Invalid email or password" });
       }
 
       const sessionToken = generateSessionToken();
@@ -95,9 +91,24 @@ export const authRouter = router({
         name: z.string().nullable(),
         email: z.string().nullable(),
         image: z.string().nullable(),
+        nextAuthProof: z.string().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      // Verify NextAuth proof token if provided
+      if (input.nextAuthProof) {
+        const parts = input.nextAuthProof.split(".");
+        if (parts.length !== 2) throw new TRPCError({ code: "UNAUTHORIZED", message: "Invalid auth proof" });
+        const payload = parts[0];
+        const signature = parts[1];
+        const decodedPayload = Buffer.from(payload, "base64").toString();
+        const expectedSig = createHmac("sha256", process.env.NEXTAUTH_SECRET || "").update(decodedPayload).digest("hex");
+        if (signature !== expectedSig) throw new TRPCError({ code: "UNAUTHORIZED", message: "Invalid auth proof signature" });
+        const data = JSON.parse(decodedPayload);
+        if (data.exp < Math.floor(Date.now() / 1000)) throw new TRPCError({ code: "UNAUTHORIZED", message: "Auth proof expired" });
+        if (data.sub !== input.id) throw new TRPCError({ code: "FORBIDDEN", message: "User ID mismatch" });
+      }
+
       // Find or create the user from the OAuth provider data
       let user = await ctx.prisma.user.findUnique({
         where: { id: input.id },
