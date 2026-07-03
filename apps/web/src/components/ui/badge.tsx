@@ -7,9 +7,9 @@ const variants: Record<BadgeVariant, string> = {
   default: "border-transparent bg-primary text-primary-foreground",
   secondary: "border-transparent bg-secondary text-secondary-foreground",
   outline: "border-border text-foreground",
-  success: "border-emerald-500/30 bg-emerald-500/10 text-emerald-400",
-  warning: "border-amber-500/30 bg-amber-500/10 text-amber-300",
-  destructive: "border-red-500/30 bg-red-500/10 text-red-400",
+  success: "border-success/30 bg-success/10 text-success",
+  warning: "border-warning/30 bg-warning/10 text-warning",
+  destructive: "border-destructive/30 bg-destructive/10 text-destructive-foreground",
 };
 
 export function Badge({
