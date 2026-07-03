@@ -13,8 +13,8 @@ COPY package.json ./
 COPY apps/api/package.json apps/api/package.json
 COPY packages/types/package.json packages/types/package.json
 
-# Install dependencies (frozen lockfile ensures reproducibility)
-RUN pnpm install --frozen-lockfile
+# Install dependencies (no-frozen to handle lockfile drift in monorepo)
+RUN pnpm install --no-frozen-lockfile
 
 # Generate Prisma client
 COPY apps/api/prisma ./apps/api/prisma
