@@ -8,8 +8,8 @@ export const warRoomRouter = router({
     const room = await ctx.prisma.warRoom.findFirst({
       orderBy: { createdAt: "desc" },
     });
-    if (!room) throw new TRPCError({ code: "NOT_FOUND", message: "No active war room" });
-    return room;
+    // Return null instead of throwing, so the frontend can show a meaningful empty state
+    return room ?? null;
   }),
 
   getMessages: publicProcedure
