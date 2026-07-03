@@ -28,12 +28,6 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL
 const SESSION_CACHE_KEY = "unvibe_user_cache";
 const SESSION_TOKEN_KEY = "unvibe_session_token";
 
-function authHeaders(token: string | null): HeadersInit {
-  const headers: HeadersInit = { "Content-Type": "application/json" };
-  if (token) headers["Authorization"] = `Bearer ${token}`;
-  return headers;
-}
-
 export const useAuthStore = create<AuthStore>((set, get) => ({
   user: null,
   isLoading: true,
