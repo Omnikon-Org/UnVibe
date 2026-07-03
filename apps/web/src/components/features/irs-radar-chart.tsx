@@ -13,7 +13,7 @@ export function IRSRadarChart({ data }: { data: Array<{ subject: string; score: 
         {data.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center text-center">
             <p className="text-sm text-muted-foreground">No radar data yet</p>
-            <p className="mt-1 text-xs text-muted-foreground/60">
+            <p className="mt-1 text-xs text-muted-foreground">
               Complete modules to see your skill breakdown
             </p>
           </div>
