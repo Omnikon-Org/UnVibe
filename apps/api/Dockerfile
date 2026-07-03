@@ -1,4 +1,6 @@
 FROM node:20-alpine AS base
+# OpenSSL required by Prisma at runtime
+RUN apk add --no-cache openssl
 RUN corepack enable && corepack prepare pnpm@10.18.0 --activate
 WORKDIR /app
 
@@ -20,13 +22,15 @@ RUN pnpm install --no-frozen-lockfile
 COPY apps/api/prisma ./apps/api/prisma
 RUN pnpm --filter=api exec prisma generate
 
+# Copy root tsconfig.base.json — needed by both types and api
+COPY tsconfig.base.json ./
+
 # Build @unvibe/types first (needed for api dependency)
 COPY packages/types/tsconfig.json packages/types/tsconfig.json
 COPY packages/types/src packages/types/src
 RUN pnpm --filter=@unvibe/types build
 
 # Build the API
-COPY tsconfig.base.json ./
 COPY apps/api/tsconfig.json ./apps/api/tsconfig.json
 COPY apps/api/src ./apps/api/src
 RUN pnpm --filter=api build
