@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { ArrowRight, Clock, Target, Trophy } from "lucide-react";
-import { TRPCClientError } from "@trpc/client";
 import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,15 +21,15 @@ export default function DashboardPage() {
   const leaderboardQuery = trpc.warRoom.getLeaderboard.useQuery();
   const statsQuery = trpc.profile.getStats.useQuery();
 
-  const { data: profile, isLoading: profileLoading } = profileQuery;
-  const { data: tracks, isLoading: tracksLoading } = tracksQuery;
-  const { data: leaderboard, isLoading: leaderboardLoading } = leaderboardQuery;
-  const { data: stats, isLoading: statsLoading } = statsQuery;
+  const { data: profile } = profileQuery;
+  const { data: tracks } = tracksQuery;
+  const { data: leaderboard } = leaderboardQuery;
+  const { data: stats } = statsQuery;
 
   const queries = [profileQuery, tracksQuery, leaderboardQuery, statsQuery];
   const isLoading = queries.some((q) => q.isLoading);
   const hasUnauthorized = queries.some(
-    (q) => q.error && (q.error as TRPCClientError<any>).data?.code === "UNAUTHORIZED",
+    (q) => q.error && (q.error as { data?: { code?: string } }).data?.code === "UNAUTHORIZED",
   );
 
   useEffect(() => {
@@ -45,7 +44,7 @@ export default function DashboardPage() {
 
   if (isError) {
     const nonAuthErrors = queries.some(
-      (q) => q.error && (q.error as TRPCClientError<any>).data?.code !== "UNAUTHORIZED",
+      (q) => q.error && (q.error as { data?: { code?: string } }).data?.code !== "UNAUTHORIZED",
     );
     if (nonAuthErrors) {
       return (
