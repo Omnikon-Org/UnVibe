@@ -117,12 +117,22 @@ initRedisDeps().catch((err) => {
 const app = express();
 const httpServer = createServer(app);
 
+const allowedOrigins = (process.env.CORS_ORIGIN ?? "")
+  .split(",")
+  .map((o) => o.trim())
+  .filter(Boolean);
+
+const corsOptions: cors.CorsOptions = {
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+    callback(new Error(`CORS: origin '${origin}' not allowed`));
+  },
+  credentials: true,
+};
+
 // Socket.io
 const io = new Server(httpServer, {
-  cors: {
-    origin: process.env.CORS_ORIGIN ?? "http://localhost:3000",
-    credentials: true,
-  },
+  cors: { origin: allowedOrigins, credentials: true },
 });
 
 io.on("connection", (socket) => {
@@ -132,7 +142,7 @@ io.on("connection", (socket) => {
   });
 });
 
-app.use(cors({ origin: "http://localhost:3000", credentials: true }));
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Sentry handler (request)
