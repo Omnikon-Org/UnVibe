@@ -42,7 +42,7 @@ export default function SignInPage() {
   if (loading) return <LoadingPanel label="Signing in" />;
 
   return (
-    <main className="surface-grid flex min-h-screen items-center justify-center p-4">
+    <main className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-md bg-card/95 backdrop-blur">
         <CardHeader>
           <Link href="/" className="mb-6 flex items-center gap-3">
