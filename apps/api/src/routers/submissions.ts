@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, router } from "../trpc";
-import type { Prisma } from "@prisma/client";
 import pino from "pino";
 
 const logger = pino({ name: "submissions-router" });
@@ -77,7 +76,7 @@ export const submissionsRouter = router({
     )
     .query(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
-      const where: Prisma.SubmissionWhereInput = { userId };
+      const where: { userId: string; moduleId?: string } = { userId };
       if (input?.moduleId) where.moduleId = input.moduleId;
 
       const submissions = await ctx.prisma.submission.findMany({

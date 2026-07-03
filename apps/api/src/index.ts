@@ -8,17 +8,9 @@ import * as Sentry from "@sentry/node";
 import { PrismaClient } from "@prisma/client";
 import { Queue } from "bullmq";
 import net from "net";
-import { router, publicProcedure } from "./trpc";
 import { createContext } from "./context";
 import { createSubmissionWorker } from "./services/submission-worker";
-import { authRouter } from "./routers/auth";
-import { tracksRouter } from "./routers/tracks";
-import { modulesRouter } from "./routers/modules";
-import { irsRouter } from "./routers/irs";
-import { warRoomRouter } from "./routers/warRoom";
-import { submissionsRouter } from "./routers/submissions";
-import { profileRouter } from "./routers/profile";
-import { judge0Router } from "./routers/judge0";
+import { appRouter, type AppRouter } from "./router";
 import dotenv from "dotenv";
 
 dotenv.config({ path: "../../.env.local" });
@@ -121,23 +113,6 @@ async function initRedisDeps(): Promise<void> {
 initRedisDeps().catch((err) => {
   logger.error({ err }, "Unexpected error during Redis initialization");
 });
-
-// tRPC router
-const appRouter = router({
-  health: publicProcedure.query(() => {
-    return { status: "ok", timestamp: new Date() };
-  }),
-  auth: authRouter,
-  tracks: tracksRouter,
-  modules: modulesRouter,
-  submissions: submissionsRouter,
-  irs: irsRouter,
-  warRoom: warRoomRouter,
-  profile: profileRouter,
-  judge0: judge0Router,
-});
-
-export type AppRouter = typeof appRouter;
 
 const app = express();
 const httpServer = createServer(app);
