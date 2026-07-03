@@ -1,164 +1,163 @@
 ---
-phase: full-project-review
-status: partial
-findings_in_scope: 22
-fixed: 21
-skipped: 1
-skipped_reasons:
-  - WR-07: localStorage session token - requires architectural change to httpOnly cookies
+phase: ui-audit
+fixed_at: 2026-07-03T00:00:00Z
+review_path: C:\Users\yuvra\OneDrive\Desktop\Yuvraj\UnVibe\UI-AUDIT.md
 iteration: 1
+findings_in_scope: 10
+fixed: 10
+skipped: 0
+status: all_fixed
 ---
 
-# Phase full-project-review: Code Review Fix Report
+# UI Audit — Code Fix Report
 
-**Fixed at:** 2026-07-02T22:25:00Z
-**Source review:** REVIEW.md
+**Fixed at:** 2026-07-03
+**Source review:** UI-AUDIT.md
 **Iteration:** 1
 
 **Summary:**
-- Findings in scope: 22
-- Fixed: 21
-- Skipped: 1
+- Findings in scope: 10
+- Fixed: 10
+- Skipped: 0
 
 ## Fixed Issues
 
-### CR-01: linkOAuth Auth Bypass
+### Fix 1: Remove eyebrow badge pattern from PageHeader
 
-**Files modified:** `apps/api/src/routers/auth.ts`, `apps/web/src/components/app/session-sync.tsx`, `apps/web/src/app/api/auth/issue-link-token/route.ts`
-**Commit:** `0e1d529`
+**Files modified:** 
+- `apps/web/src/components/app/page-header.tsx`
+- `apps/web/src/app/app/dashboard/page.tsx`
+- `apps/web/src/app/app/tracks/page.tsx`
+- `apps/web/src/app/app/war-room/page.tsx`
+- `apps/web/src/app/app/blindspot-map/page.tsx`
+- `apps/web/src/app/app/profile/page.tsx`
+
+**Applied fix:** 
+- Removed the `eyebrow` prop from PageHeader component interface
+- Removed the Badge import from page-header.tsx
+- Removed the conditional eyebrow badge render block
+- Added `className` prop with `cn()` utility for extensibility
+- Removed `eyebrow="..."` prop from all 6 PageHeader call sites in dashboard, tracks (x2), war-room, blindspot-map (x2), and profile pages
+
+### Fix 2: Replace developer-facing copy
+
+**Files modified:**
+- `apps/web/src/app/page.tsx`
+- `apps/web/src/app/app/dashboard/page.tsx`
+- `apps/web/src/app/app/war-room/page.tsx`
+
 **Applied fix:**
-- Added `nextAuthProof` input field to `linkOAuth` endpoint. When provided, verifies a short-lived HMAC-signed JWT that proves the caller has a valid NextAuth session.
-- Created `apps/web/src/app/api/auth/issue-link-token/route.ts` — a Next.js API route that issues the proof token for authenticated NextAuth sessions (1 minute expiry).
-- Modified `SessionSync` to fetch the proof token before calling `linkOAuth`, with fallback to legacy behavior.
+- `"Open mock dashboard"` → `"Open dashboard"` (landing page CTA)
+- `"Mock data mirrors the future API shape while the backend catches up."` → `"Track your training progress, streaks, and leaderboard ranking."` (dashboard description)
+- `"Socket.io client wiring is present with a mock live feed so the room works without backend events."` → `"Compete in live coding sessions and defend your reasoning against peers."` (war room description)
 
-### CR-02: SessionSync Clears Email/Password Sessions
+### Fix 3: Fix Badge component hardcoded colors
 
-**Files modified:** `apps/web/src/components/app/session-sync.tsx`
-**Commit:** `0e1d529`
+**Files modified:**
+- `apps/web/src/components/ui/badge.tsx`
+
 **Applied fix:**
-- Added `authMethod` ref and `unvibe_auth_method` localStorage key to track OAuth vs email/password auth method.
-- Changed the cleanup effect to check `localStorage.getItem("unvibe_auth_method") === "oauth"` instead of relying on the session token prefix check.
-- On successful OAuth link, sets `authMethod.current = "oauth"` and stores in localStorage.
+- `success` variant: `border-emerald-500/30 bg-emerald-500/10 text-emerald-400` → `border-success/30 bg-success/10 text-success`
+- `warning` variant: `border-amber-500/30 bg-amber-500/10 text-amber-300` → `border-warning/30 bg-warning/10 text-warning`
+- `destructive` variant: `border-red-500/30 bg-red-500/10 text-red-400` → `border-destructive/30 bg-destructive/10 text-destructive-foreground`
 
-### CR-03: Socket.io Client Wrong Port
+### Fix 4: Replace hardcoded colors in feature components
 
-**Files modified:** `apps/web/src/lib/socket/client.ts`
-**Commit:** `3c69acb`
-**Applied fix:** Changed default port from 4000 to 3001: `io(process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001", ...)`
+**Files modified:**
+- `apps/web/src/components/features/quiz-ui.tsx`
+- `apps/web/src/components/features/diff-viewer.tsx`
+- `apps/web/src/components/features/streak-tracker.tsx`
 
-### CR-04: .env.example Wrong Port
+**Applied fix:**
+- QuizUI complete state: `border-emerald-500/30 bg-emerald-500/10 text-emerald-300` → `border-success/30 bg-success/10 text-success`
+- QuizUI correct answer: `border-emerald-500/40 bg-emerald-500/10 text-emerald-300` → `border-success/40 bg-success/10 text-success`
+- DiffViewer additions: `bg-emerald-500/10` → `bg-success/10`
+- DiffViewer removals: `bg-red-500/10` → `bg-destructive/10`
+- StreakTracker flame: `text-amber-400` → `text-accent`
 
-**Files modified:** `.env.example`
-**Commit:** `ba8eb6c`
-**Applied fix:** Changed `NEXT_PUBLIC_API_URL="http://localhost:3000"` to `NEXT_PUBLIC_API_URL="http://localhost:3001"`
+### Fix 5: Fix landing page hardcoded colors
 
-### WR-01: Auth Timing Attack
+**Files modified:**
+- `apps/web/src/app/page.tsx`
 
-**Files modified:** `apps/api/src/routers/auth.ts`
-**Commit:** `0e1d529`
-**Applied fix:** Unified signIn error messages — both "user not found" and "invalid password" now return `UNAUTHORIZED` with "Invalid email or password". Removed the OAuth account disclosure message.
+**Applied fix:**
+- Code block `bg-black` → `bg-card`
+- Code block `text-cyan-100` → `text-foreground`
+- Syntax highlight `text-amber-300` → `text-warning`
+- Syntax highlight `text-emerald-300` → `text-success`
+- Landing hero badge: removed `border-primary/40 bg-primary/10` (kept `variant="outline"`)
+- Sample module label: removed `uppercase tracking-[0.22em]` and capitalized "Sample module"
+- Removed hero metric numbering (the `0{index + 1}` span from signal items)
+- Removed `surface-grid` class from hero section
 
-### WR-02: Streak Calculation
+### Fix 6: Fix mobile nav text size and error fallback
 
-**Files modified:** `apps/api/src/routers/profile.ts`
-**Commit:** `24e0731`
-**Applied fix:** Replaced broken "last submission" logic with proper consecutive day counting. Fetches all submissions, deduplicates by date, sorts descending, and counts consecutive days (gaps > 1 day break the streak).
+**Files modified:**
+- `apps/web/src/components/app/app-shell.tsx`
+- `apps/web/src/components/app/error-fallback.tsx`
 
-### WR-03: Transaction Safety for Submissions
+**Applied fix:**
+- `text-[11px]` → `text-xs` on mobile bottom nav labels
+- Removed `uppercase tracking-[0.22em]` from user.email display
+- Standardized backdrop opacities: sidebar `bg-card/80` → `bg-card/90`, header `bg-background/85` → `bg-background/90`, mobile nav `bg-card/95` → `bg-card/90`
+- `min-h-[400px]` → `min-h-64` in ErrorFallback
 
-**Files modified:** `apps/api/src/routers/submissions.ts`, `apps/api/src/routers/modules.ts`
-**Commit:** `6063cf6`
-**Applied fix:** Wrapped `submissionQueue.add()` in try-catch in both `submissions.create` and `modules.submitDecode`. If enqueue fails, the submission remains as a pending orphan with a logged error. Added pino logger imports.
+### Fix 7: Fix IRS radar chart contrast
 
-### WR-04: Pending Submission Dedup
+**Files modified:**
+- `apps/web/src/components/features/irs-radar-chart.tsx`
 
-**Files modified:** `apps/api/src/routers/submissions.ts`, `apps/api/src/routers/modules.ts`
-**Commit:** `6063cf6`
-**Applied fix:** Before creating a new submission, checks for an existing pending submission for the same (userId, moduleId). If found, returns a `CONFLICT` error with message "You already have a pending submission for this module. Please wait for it to be scored."
+**Applied fix:**
+- `text-muted-foreground/60` → `text-muted-foreground` (fixes WCAG contrast failure)
 
-### WR-05: Socket.io CORS
+### Fix 8: Replace uppercase tracking labels
 
-**Files modified:** `apps/api/src/index.ts`
-**Commit:** `25ddf91`
-**Applied fix:** Changed Socket.io CORS from `origin: "*"` to `origin: process.env.CORS_ORIGIN ?? "http://localhost:3000"` with `credentials: true`, aligning with Express CORS configuration.
+**Files modified:**
+- `apps/web/src/app/app/blindspot-map/page.tsx`
+- `apps/web/src/components/features/code-editor.tsx`
+- `apps/web/src/components/features/diff-viewer.tsx`
 
-### WR-06: Duplicated IRS Logic
+**Applied fix:**
+- Blindspot map "Evidence" and "Next action" labels: `uppercase tracking-[0.18em]` → `text-xs font-medium text-muted-foreground`
+- Code editor language label: removed `uppercase tracking-[0.18em]`
+- Diff viewer column headers: `uppercase tracking-[0.18em]` → `font-medium`
 
-**Files modified:** `apps/api/src/services/submission-worker.ts`
-**Commit:** `9062828`
-**Applied fix:** Replaced the duplicated `triggerIRSRecalculation` function body with a call to the shared `calculateIRS` function from `irs-engine.ts` (which was already imported).
+### Fix 9: Add warning/success tokens to tailwind config
 
-### WR-07: Session Token in localStorage
+**Files modified:**
+- `apps/web/tailwind.config.ts`
 
-**Files modified:** `apps/web/src/stores/auth-store.ts`
-**Commit:** `409f95d`
-**Status:** acknowledged — not a structural fix
-**Applied fix:** Added a security notice comment at the top of the file documenting the known XSS risk and recommended mitigation. A full migration to httpOnly cookies requires consolidating the API and web app to a single origin, which is an architectural change beyond the scope of a single fix pass.
+**Applied fix:**
+- Added `success` color token (DEFAULT + foreground) referencing `--success` / `--success-foreground` CSS variables
+- Added `warning` color token (DEFAULT + foreground) referencing `--warning` / `--warning-foreground` CSS variables
 
-### WR-08: Missing maxLength on Inputs
+### Fix 10: Add semantic tokens to globals.css
 
-**Files modified:** `apps/web/src/app/auth/signin/page.tsx`, `apps/web/src/app/auth/signup/page.tsx`
-**Commit:** `a37e459`
-**Applied fix:** Added `maxLength={255}` to email inputs, `maxLength={128}` to password inputs, `maxLength={100}` to name input.
+**Files modified:**
+- `apps/web/src/app/globals.css`
 
-### WR-09: Hardcoded "dark" Class
+**Applied fix:**
+- Removed `surface-grid` utility class from `@layer utilities`
+- Added `--success`, `--success-foreground`, `--warning`, `--warning-foreground` CSS variables in `:root` (light mode)
+- Added same variables in `.dark` (dark mode with adjusted lightness values)
 
-**Files modified:** `apps/web/src/app/layout.tsx`
-**Commit:** `3946105`
-**Applied fix:** Changed `<html lang="en" className="dark">` to `<html lang="en" suppressHydrationWarning>`. The `ThemeProvider` component already handles the initial theme via `useEffect` with `document.documentElement.classList.toggle("dark", darkMode)`.
+## Verification Results
 
-### WR-10: Duplicated Leaderboard Query
-
-**Files modified:** `apps/api/src/routers/irs.ts`, `apps/api/src/routers/warRoom.ts`, `apps/api/src/services/leaderboard.ts` (new)
-**Commit:** `18e9f52`
-**Applied fix:** Created a shared `getLeaderboard(prisma, take)` service function in `apps/api/src/services/leaderboard.ts`. Both routers import and call it with their respective `take` values (50 for irs, 20 for warRoom).
-
-### WR-11: Race Condition in Defend Session
-
-**Files modified:** `apps/api/src/services/submission-worker.ts`
-**Commit:** `9062828`
-**Applied fix:** Changed the catch handler in `scheduleDefendSession` to log a warning (instead of error) for the race condition case where concurrent workers create duplicate sessions. The check-then-create pattern remains but is now resilient to race conditions.
-
-### WR-12: Fragile Redis URL Parsing
-
-**Files modified:** `apps/api/src/index.ts`
-**Commit:** `25ddf91`
-**Applied fix:** Replaced brittle string-split parsing with a `parseRedisUrl` function that uses the `URL` constructor for robust parsing. Handles authentication, IPv6, and Unix socket URLs gracefully with fallback defaults.
-
-### IN-01: Placeholder Hooks
-
-**Files modified:** `apps/web/src/lib/trpc/hooks.ts`
-**Commit:** `d799109`
-**Applied fix:** Wired placeholder hooks to actual tRPC endpoints:
-- `useDashboardData` → `trpc.tracks.getAll.useQuery()`
-- `useTracksData` → `trpc.tracks.getAll.useQuery()`
-- `useModuleData` → `trpc.modules.getById.useQuery({ id: moduleId })`
-- `useWarRoomData` → `trpc.warRoom.getRoom.useQuery()`
-- `useProfileData` → `trpc.profile.getProfile.useQuery()`
-- `useBlindspotsData` → `trpc.irs.getBlindspots.useQuery()`
-
-### IN-03: Record<string, unknown> Type Bypass
-
-**Files modified:** `apps/api/src/routers/submissions.ts`
-**Commit:** `6063cf6`
-**Applied fix:** Changed `const where: Record<string, unknown> = { userId }` to `const where: Prisma.SubmissionWhereInput = { userId }` for proper type safety with Prisma queries.
-
-### IN-07: Seed User Has No PasswordHash
-
-**Files modified:** `apps/api/prisma/seed.ts`
-**Commit:** `adb1fc9`
-**Applied fix:** Added `import bcrypt from "bcryptjs"` and `passwordHash: await bcrypt.hash("demo1234", 10)` to the demo user seed data. The demo user can now sign in with email/password.
-
-## Skipped Issues
-
-### WR-07: Session Token in localStorage (XSS Vulnerability)
-
-**File:** `apps/web/src/stores/auth-store.ts`
-**Reason:** Architectural limitation — requires migrating the API session to httpOnly cookies, which requires the API and web app to be served from the same origin (or a reverse proxy). This is a significant cross-team change beyond a single fix pass.
-**Original issue:** The API session token is stored in localStorage, accessible to any JavaScript running on the page. A single XSS vulnerability anywhere in the application would leak the session token, allowing full account takeover.
+| Check | Pattern | Status |
+|-------|---------|--------|
+| ✅ | `surface-grid` in TSX/CSS | Zero occurrences |
+| ✅ | `eyebrow=` props in TSX | Zero occurrences |
+| ✅ | `text-emerald`, `text-amber-3`, `text-cyan`, `text-red-4` | Zero occurrences |
+| ✅ | `bg-emerald`, `bg-red-` hardcoded | Zero occurrences |
+| ✅ | `text-[11px]` | Zero occurrences |
+| ✅ | `text-muted-foreground/60` | Zero occurrences |
+| ✅ | `min-h-[400px]` | Zero occurrences |
+| ✅ | `bg-black` | Zero occurrences |
+| ✅ | `text-amber-` hardcoded | Zero occurrences |
+| ✅ | `uppercase tracking-[` | Zero occurrences |
 
 ---
 
-_Fixed: 2026-07-02T22:25:00Z_
+_Fixed: 2026-07-03_
 _Fixer: OpenCode (gsd-code-fixer)_
 _Iteration: 1_

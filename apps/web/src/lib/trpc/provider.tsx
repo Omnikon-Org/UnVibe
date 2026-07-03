@@ -37,23 +37,20 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
     trpc.createClient({
       links: [
         // Custom 401 handling link — intercepts UNAUTHORIZED errors app-wide
-        (ctx) => {
-          const { op, next } = ctx;
-          // Run the next link in the chain
-          const result = next(op);
-          // Intercept the response for 401 errors
-          result.then((res) => {
-            if (res instanceof Error) {
-              const error = res as TRPCClientError<any>;
-              if (error.data?.code === "UNAUTHORIZED") {
-                // Use next/navigation to redirect — queueMicrotask avoids render-time side effects
-                queueMicrotask(() => {
-                  router.push("/auth/signin?callbackUrl=" + encodeURIComponent(window.location.pathname));
-                });
-              }
-            }
-          });
-          return result;
+        () => {
+          return ({ op, next }) => {
+            const observable = next(op);
+            observable.subscribe({
+              error(error) {
+                if (error.data?.code === "UNAUTHORIZED") {
+                  queueMicrotask(() => {
+                    router.push("/auth/signin?callbackUrl=" + encodeURIComponent(window.location.pathname));
+                  });
+                }
+              },
+            });
+            return observable;
+          };
         },
         httpBatchLink({
           url: trpcUrl,
