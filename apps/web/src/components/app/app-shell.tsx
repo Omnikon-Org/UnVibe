@@ -7,6 +7,17 @@ import { cn } from "@/lib/utils";
 import { ThemeController } from "./theme-controller";
 import { useAuthStore } from "@/stores/auth-store";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const nav = [
   { href: "/app/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -77,9 +88,25 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <p className="text-sm font-medium">{user?.name ?? "Guest"}</p>
               <p className="text-xs text-muted-foreground">{user?.email ?? "signed out"}</p>
             </div>
-            <Button variant="outline" size="sm" onClick={handleSignOut}>
-              Sign out
-            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  Sign out
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Confirm sign out</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    You will be signed out of UnVibe. Your progress is saved automatically.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleSignOut}>Sign out</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </header>
         <main className="mx-auto w-full max-w-7xl px-4 py-6 pb-24 sm:px-6 lg:py-8">{children}</main>

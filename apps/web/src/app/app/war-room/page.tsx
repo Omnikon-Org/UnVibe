@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/app/page-header";
 import { Badge } from "@/components/ui/badge";
 import { WarRoomLive } from "@/components/features/war-room-live";
 import { trpc } from "@/lib/trpc/client";
+import type { LeaderboardEntry } from "@unvibe/types";
 
 export default function WarRoomPage() {
   const { data: room, isLoading: roomLoading, isError: roomError } =
