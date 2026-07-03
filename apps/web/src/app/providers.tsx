@@ -8,9 +8,20 @@ import { SessionSync } from "@/components/app/session-sync";
 
 function SessionRestorer({ children }: { children: React.ReactNode }) {
   const restoreSession = useAuthStore((s) => s.restoreSession);
+  const checkSession = useAuthStore((s) => s.checkSession);
+  const user = useAuthStore((s) => s.user);
+
   useEffect(() => {
     restoreSession();
   }, [restoreSession]);
+
+  // After restoring from cache, validate with server
+  useEffect(() => {
+    if (user) {
+      checkSession(); // Will update user to null if session expired
+    }
+  }, [user, checkSession]);
+
   return <>{children}</>;
 }
 
