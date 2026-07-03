@@ -1,7 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { ArrowRight, Clock, Target, Trophy } from "lucide-react";
+import { TRPCClientError } from "@trpc/client";
 import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,26 +15,49 @@ import { Leaderboard } from "@/components/features/leaderboard";
 import { StreakTracker } from "@/components/features/streak-tracker";
 
 export default function DashboardPage() {
-  const { data: profile, isLoading: profileLoading, isError: profileError } =
-    trpc.profile.getProfile.useQuery();
-  const { data: tracks, isLoading: tracksLoading, isError: tracksError } =
-    trpc.tracks.getAll.useQuery();
-  const { data: leaderboard, isLoading: leaderboardLoading, isError: leaderboardError } =
-    trpc.warRoom.getLeaderboard.useQuery();
-  const { data: stats, isLoading: statsLoading, isError: statsError } =
-    trpc.profile.getStats.useQuery();
+  const router = useRouter();
 
-  const isLoading = profileLoading || tracksLoading || leaderboardLoading || statsLoading;
-  const isError = profileError || tracksError || leaderboardError || statsError;
+  const profileQuery = trpc.profile.getProfile.useQuery();
+  const tracksQuery = trpc.tracks.getAll.useQuery();
+  const leaderboardQuery = trpc.warRoom.getLeaderboard.useQuery();
+  const statsQuery = trpc.profile.getStats.useQuery();
 
-  if (isError) return (
-    <div role="alert" className="rounded-md bg-destructive/10 p-6 text-center">
-      <p className="font-medium text-destructive">Failed to load content</p>
-      <p className="mt-2 text-sm text-muted-foreground">
-        Please try refreshing the page. If the issue persists, contact support.
-      </p>
-    </div>
+  const { data: profile, isLoading: profileLoading } = profileQuery;
+  const { data: tracks, isLoading: tracksLoading } = tracksQuery;
+  const { data: leaderboard, isLoading: leaderboardLoading } = leaderboardQuery;
+  const { data: stats, isLoading: statsLoading } = statsQuery;
+
+  const queries = [profileQuery, tracksQuery, leaderboardQuery, statsQuery];
+  const isLoading = queries.some((q) => q.isLoading);
+  const hasUnauthorized = queries.some(
+    (q) => q.error && (q.error as TRPCClientError<any>).data?.code === "UNAUTHORIZED",
   );
+
+  useEffect(() => {
+    if (hasUnauthorized) {
+      router.push("/auth/signin?callbackUrl=" + encodeURIComponent(window.location.pathname));
+    }
+  }, [hasUnauthorized, router]);
+
+  if (hasUnauthorized) return null;
+
+  const isError = queries.some((q) => q.isError);
+
+  if (isError) {
+    const nonAuthErrors = queries.some(
+      (q) => q.error && (q.error as TRPCClientError<any>).data?.code !== "UNAUTHORIZED",
+    );
+    if (nonAuthErrors) {
+      return (
+        <div role="alert" className="rounded-md bg-destructive/10 p-6 text-center">
+          <p className="font-medium text-destructive">Failed to load content</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Please try refreshing the page. If the issue persists, contact support.
+          </p>
+        </div>
+      );
+    }
+  }
   if (isLoading) return (
     <div role="status" aria-label="Loading dashboard" className="space-y-6">
       <div className="grid gap-4 md:grid-cols-3">
