@@ -57,7 +57,7 @@ export const profileRouter = router({
         take: input?.limit ?? 5,
       });
 
-      return submissions.map((sub) => ({
+      return submissions.map((sub: (typeof submissions)[number]) => ({
         id: sub.id,
         moduleId: sub.moduleId,
         moduleTitle: sub.module?.title ?? "Unknown",
