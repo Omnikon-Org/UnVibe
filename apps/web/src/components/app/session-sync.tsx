@@ -61,22 +61,21 @@ export function SessionSync() {
         },
         {
           onSuccess: (data) => {
-            // Session token is set as httpOnly cookie by the API — not stored in JS
             if (data?.user) {
-              useAuthStore.setState({
-                user: {
-                  id: data.user.id,
-                  name: data.user.name ?? null,
-                  email: data.user.email ?? null,
-                  image: data.user.image ?? null,
-                },
-              });
-              localStorage.setItem(USER_CACHE_KEY, JSON.stringify({
+              const userData = {
                 id: data.user.id,
                 name: data.user.name ?? null,
                 email: data.user.email ?? null,
                 image: data.user.image ?? null,
-              }));
+              };
+              useAuthStore.setState({
+                user: userData,
+                sessionToken: data.sessionToken ?? null,
+              });
+              localStorage.setItem(USER_CACHE_KEY, JSON.stringify(userData));
+              if (data.sessionToken) {
+                localStorage.setItem("unvibe_session_token", data.sessionToken);
+              }
             }
           },
           onError: () => {

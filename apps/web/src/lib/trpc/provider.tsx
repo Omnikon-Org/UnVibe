@@ -5,6 +5,9 @@ import { httpBatchLink, TRPCClientError } from "@trpc/client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { trpc } from "./client";
+import { useAuthStore } from "@/stores/auth-store";
+
+const SESSION_TOKEN_KEY = "unvibe_session_token";
 
 export function TRPCProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -14,7 +17,6 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            // Don't retry 401 errors — redirect immediately
             retry: (failureCount, error) => {
               if (error instanceof TRPCClientError && error.data?.code === "UNAUTHORIZED") {
                 return false;
@@ -26,9 +28,6 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
       }),
   );
 
-  // Use relative URL so requests go through Next.js rewrites (/trpc -> localhost:3001).
-  // This keeps requests same-origin, enabling httpOnly cookies for session auth.
-  // Falls back to NEXT_PUBLIC_API_URL if set (e.g. direct API access).
   const trpcUrl = process.env.NEXT_PUBLIC_API_URL
     ? `${process.env.NEXT_PUBLIC_API_URL}/trpc`
     : "/trpc";
@@ -36,7 +35,6 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
   const [trpcClient] = useState(() =>
     trpc.createClient({
       links: [
-        // Custom 401 handling link — intercepts UNAUTHORIZED errors app-wide
         () => {
           return ({ op, next }) => {
             const observable = next(op);
@@ -54,10 +52,13 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
         },
         httpBatchLink({
           url: trpcUrl,
-          // No Authorization header — session is in httpOnly cookie (same-origin via proxy).
-          // When NEXT_PUBLIC_API_URL is set for direct access, the API's extractSessionToken
-          // falls back to reading the cookie or Authorization header.
-          fetch: (input, init) => fetch(input, { ...init, credentials: "include" }),
+          headers() {
+            // Read token from store first, fall back to localStorage for SSR hydration
+            const token =
+              useAuthStore.getState().sessionToken ??
+              (typeof window !== "undefined" ? localStorage.getItem(SESSION_TOKEN_KEY) : null);
+            return token ? { Authorization: `Bearer ${token}` } : {};
+          },
         }),
       ],
     }),
