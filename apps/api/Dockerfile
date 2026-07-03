@@ -36,19 +36,19 @@ COPY apps/api/src ./apps/api/src
 RUN pnpm --filter=api build
 
 # ── runner stage: minimal production image ──
+# WORKDIR at /app (repo root) so pnpm's store symlinks resolve correctly
 FROM base AS runner
-WORKDIR /app/apps/api
+WORKDIR /app
 
-# Copy compiled output
-COPY --from=deps /app/apps/api/dist ./dist
-# Copy Prisma schema + migrations for runtime migrations
-COPY --from=deps /app/apps/api/prisma ./prisma
+# Copy compiled API output
+COPY --from=deps /app/apps/api/dist ./apps/api/dist
+# Copy Prisma schema + migrations for runtime
+COPY --from=deps /app/apps/api/prisma ./apps/api/prisma
 # Copy package.json for process metadata
-COPY --from=deps /app/apps/api/package.json ./
-
-# Copy node_modules from the monorepo (pnpm maintains symlinks correctly)
-COPY --from=deps /app/node_modules ../node_modules
-COPY --from=deps /app/apps/api/node_modules ./node_modules
+COPY --from=deps /app/apps/api/package.json ./apps/api/package.json
+# Copy the full pnpm virtual store + root node_modules (needed for symlink resolution)
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/apps/api/node_modules ./apps/api/node_modules
 
 EXPOSE 3001
-CMD ["node", "dist/index.js"]
+CMD ["node", "apps/api/dist/index.js"]
