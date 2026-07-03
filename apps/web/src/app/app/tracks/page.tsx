@@ -16,7 +16,6 @@ export default function TracksPage() {
     return (
       <>
         <PageHeader
-          eyebrow="tracks"
           title="Choose a training path"
           description="Select a track to begin training with real modules."
         />
@@ -33,7 +32,6 @@ export default function TracksPage() {
   return (
     <>
       <PageHeader
-        eyebrow="tracks"
         title="Choose a training path"
         description="Select a track to begin training with real modules."
       />

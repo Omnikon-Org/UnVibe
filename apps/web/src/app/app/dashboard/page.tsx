@@ -63,9 +63,8 @@ export default function DashboardPage() {
   return (
     <>
       <PageHeader
-        eyebrow="dashboard"
         title="Training status"
-        description="Mock data mirrors the future API shape while the backend catches up."
+        description="Track your training progress, streaks, and leaderboard ranking."
         action={
           <Button asChild>
             <Link

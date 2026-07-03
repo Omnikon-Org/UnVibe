@@ -44,7 +44,6 @@ export default function ProfilePage() {
   return (
     <>
       <PageHeader
-        eyebrow="profile"
         title={profile.name}
         description={profile.email ?? ""}
         action={<Badge>IRS {profile.irs}</Badge>}

@@ -21,7 +21,7 @@ const featureCards = [
 export default function LandingPage() {
   return (
     <main className="min-h-screen overflow-hidden text-foreground">
-      <section className="surface-grid relative min-h-screen border-b border-border">
+      <section className="relative min-h-screen border-b border-border">
         <nav className="relative mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
           <Link href="/" className="flex items-center gap-3">
             <span className="flex h-9 w-9 items-center justify-center rounded-md border border-primary/40 bg-primary/15 font-mono text-sm font-semibold text-primary">
@@ -48,7 +48,7 @@ export default function LandingPage() {
 
         <div className="relative mx-auto grid max-w-7xl gap-10 px-6 pb-4 pt-8 lg:grid-cols-[1fr_520px] lg:items-center lg:pt-14">
           <div>
-            <Badge variant="outline" className="mb-6 border-primary/40 bg-primary/10 text-primary">
+            <Badge variant="outline" className="mb-6 text-primary">
               AI learning loop for builders
             </Badge>
             <h1 className="max-w-4xl text-balance text-5xl font-semibold tracking-tight sm:text-6xl lg:text-7xl">
@@ -61,7 +61,7 @@ export default function LandingPage() {
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Button asChild size="lg">
                 <Link href="/app/dashboard">
-                  Open mock dashboard
+                  Open dashboard
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>
@@ -74,8 +74,8 @@ export default function LandingPage() {
           <div className="rounded-lg border border-border bg-card p-4 shadow-lg shadow-black/10">
             <div className="mb-4 flex items-center justify-between border-b border-border pb-3">
               <div>
-                <p className="font-mono text-xs uppercase tracking-[0.22em] text-muted-foreground">
-                  sample module
+                <p className="font-mono text-xs text-muted-foreground">
+                  Sample module
                 </p>
                 <h2 className="font-semibold">Auth guard rebuild</h2>
               </div>
@@ -95,7 +95,6 @@ export default function LandingPage() {
                     <div>
                       <div className="flex items-center justify-between gap-3">
                         <p className="font-medium">{signal.label}</p>
-                        <span className="font-mono text-xs text-muted-foreground">0{index + 1}</span>
                       </div>
                       <p className="text-sm text-muted-foreground">{signal.value}</p>
                     </div>
@@ -103,12 +102,12 @@ export default function LandingPage() {
                 );
               })}
             </div>
-            <div className="mt-4 rounded-md border border-border bg-black p-4 font-mono text-xs leading-6 text-cyan-100">
+            <div className="mt-4 rounded-md border border-border bg-card p-4 font-mono text-xs leading-6 text-foreground">
               <p>
-                <span className="text-amber-300">const</span> session = defend(rebuild);
+                <span className="text-warning">const</span> session = defend(rebuild);
               </p>
               <p>
-                <span className="text-emerald-300">score</span>.update(session.reasoning);
+                <span className="text-success">score</span>.update(session.reasoning);
               </p>
               <p className="text-muted-foreground">{"// next question streams into War Room"}</p>
             </div>

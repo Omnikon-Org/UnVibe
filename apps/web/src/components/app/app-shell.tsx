@@ -28,7 +28,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen text-foreground">
-      <aside className="fixed inset-y-0 left-0 z-20 hidden w-64 border-r border-border bg-card/80 backdrop-blur lg:block">
+      <aside className="fixed inset-y-0 left-0 z-20 hidden w-64 border-r border-border bg-card/90 backdrop-blur lg:block">
         <div className="flex h-16 items-center gap-3 border-b border-border px-5">
           <span className="flex h-9 w-9 items-center justify-center rounded-md bg-primary/15 font-mono text-sm font-semibold text-primary">
             UV
@@ -59,14 +59,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </nav>
       </aside>
       <div className="lg:pl-64">
-        <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-border bg-background/85 px-4 backdrop-blur sm:px-6">
+        <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-border bg-background/90 px-4 backdrop-blur sm:px-6">
           <div className="flex items-center gap-3 lg:hidden">
             <BarChart3 className="h-5 w-5 text-primary" />
             <span className="font-semibold">UnVibe</span>
           </div>
           <div className="hidden lg:block">
             {user?.email && (
-              <p className="font-mono text-xs uppercase tracking-[0.22em] text-muted-foreground">
+              <p className="font-mono text-xs text-muted-foreground">
                 {user.email}
               </p>
             )}
@@ -83,7 +83,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </header>
         <main className="mx-auto w-full max-w-7xl px-4 py-6 pb-24 sm:px-6 lg:py-8">{children}</main>
-        <nav className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 border-t border-border bg-card/95 px-2 py-2 backdrop-blur lg:hidden">
+        <nav className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 border-t border-border bg-card/90 px-2 py-2 backdrop-blur lg:hidden">
           {nav.map((item) => {
             const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
             const Icon = item.icon;
@@ -92,7 +92,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex flex-col items-center gap-1 rounded-md px-2 py-2 text-[11px] text-muted-foreground",
+                  "flex flex-col items-center gap-1 rounded-md px-2 py-2 text-xs text-muted-foreground",
                   active && "bg-primary/10 text-primary",
                 )}
               >

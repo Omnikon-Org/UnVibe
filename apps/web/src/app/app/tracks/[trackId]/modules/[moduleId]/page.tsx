@@ -55,7 +55,6 @@ export default function ModulePage({ params }: { params: { trackId: string; modu
   return (
     <>
       <PageHeader
-        eyebrow={trackData?.title ?? "Track"}
         title={dbModule.title}
         description={dbModule.content}
       />

@@ -48,9 +48,8 @@ export default function WarRoomPage() {
   return (
     <>
       <PageHeader
-        eyebrow="war room"
         title={room.name}
-        description="Socket.io client wiring is present with a mock live feed so the room works without backend events."
+        description="Compete in live coding sessions and defend your reasoning against peers."
         action={<Badge variant="success">Live</Badge>}
       />
       <WarRoomLive messages={[]} leaderboard={leaderboardEntries} />
