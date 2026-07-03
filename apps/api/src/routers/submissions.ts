@@ -86,7 +86,7 @@ export const submissionsRouter = router({
         take: input?.limit ?? 20,
       });
 
-      return submissions.map((sub) => ({
+      return submissions.map((sub: { id: string; moduleId: string; code: string; status: string; feedback: string | null; createdAt: Date; updatedAt: Date; module?: { title: string } | null }) => ({
         ...sub,
         parsedFeedback: sub.feedback ? tryParseFeedback(sub.feedback) : null,
       }));
@@ -113,7 +113,7 @@ export const submissionsRouter = router({
     return {
       ...submission,
       parsedFeedback: submission.feedback ? tryParseFeedback(submission.feedback) : null,
-    };
+    } as const;
   }),
 });
 
