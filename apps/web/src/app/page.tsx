@@ -82,7 +82,7 @@ export default function LandingPage() {
               <Badge className="bg-accent text-accent-foreground">IRS 82</Badge>
             </div>
             <div className="grid gap-3">
-              {signals.map((signal, index) => {
+              {signals.map((signal) => {
                 const Icon = signal.icon;
                 return (
                   <div

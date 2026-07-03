@@ -10,7 +10,6 @@ import { trpc } from "@/lib/trpc/client";
 import { IRSRadarChart } from "@/components/features/irs-radar-chart";
 import { Leaderboard } from "@/components/features/leaderboard";
 import { StreakTracker } from "@/components/features/streak-tracker";
-import type { LeaderboardEntry } from "@unvibe/types";
 
 export default function DashboardPage() {
   const { data: profile, isLoading: profileLoading, isError: profileError } =
@@ -59,7 +58,7 @@ export default function DashboardPage() {
     score: entry.score,
     streak: 0,
     track: "",
-  } satisfies LeaderboardEntry);
+  }));
 
   return (
     <>

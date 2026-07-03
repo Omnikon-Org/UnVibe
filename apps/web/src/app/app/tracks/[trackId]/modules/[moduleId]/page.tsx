@@ -5,7 +5,7 @@ import { ModulePlayer } from "@/components/features/module-player";
 import { trpc } from "@/lib/trpc/client";
 
 export default function ModulePage({ params }: { params: { trackId: string; moduleId: string } }) {
-  const { data: trackData, isLoading: trackLoading, isError: trackError } =
+  const { isLoading: trackLoading, isError: trackError } =
     trpc.tracks.getById.useQuery({ id: params.trackId });
   const { data: dbModule, isLoading: moduleLoading, isError: moduleError } =
     trpc.modules.getById.useQuery({ id: params.moduleId });
