@@ -31,6 +31,10 @@
     --border: 214 20% 84%;
     --input: 214 20% 84%;
     --ring: 188 91% 35%;
+    --success: 152 76% 40%;
+    --success-foreground: 0 0% 100%;
+    --warning: 35 92% 55%;
+    --warning-foreground: 0 0% 100%;
 
     --radius: 0.5rem;
   }
@@ -63,6 +67,10 @@
     --border: 218 16% 21%;
     --input: 218 16% 21%;
     --ring: 187 85% 52%;
+    --success: 152 76% 36%;
+    --success-foreground: 0 0% 100%;
+    --warning: 35 92% 50%;
+    --warning-foreground: 0 0% 100%;
   }
 }
 
@@ -80,13 +88,6 @@
 }
 
 @layer utilities {
-  .surface-grid {
-    background-image:
-      linear-gradient(hsl(var(--border) / 0.3) 1px, transparent 1px),
-      linear-gradient(90deg, hsl(var(--border) / 0.3) 1px, transparent 1px);
-    background-size: 28px 28px;
-  }
-
   .text-balance {
     text-wrap: balance;
   }
