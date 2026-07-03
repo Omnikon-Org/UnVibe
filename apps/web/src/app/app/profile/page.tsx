@@ -1,7 +1,6 @@
 "use client";
 
 import { PageHeader } from "@/components/app/page-header";
-import { LoadingPanel } from "@/components/app/loading-panel";
 import { IRSRadarChart } from "@/components/features/irs-radar-chart";
 import { StreakTracker } from "@/components/features/streak-tracker";
 import { Badge } from "@/components/ui/badge";
@@ -9,18 +8,42 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc/client";
 
 export default function ProfilePage() {
-  const { data: profile, isLoading: profileLoading } = trpc.profile.getProfile.useQuery();
-  const { data: recentData } = trpc.profile.getRecent.useQuery({ limit: 5 });
-  const { data: stats } = trpc.profile.getStats.useQuery();
+  const { data: profile, isLoading: profileLoading, isError: profileError } =
+    trpc.profile.getProfile.useQuery();
+  const { data: recentData, isLoading: recentLoading, isError: recentError } =
+    trpc.profile.getRecent.useQuery({ limit: 5 });
+  const { data: stats, isLoading: statsLoading, isError: statsError } =
+    trpc.profile.getStats.useQuery();
 
-  const isLoading = profileLoading;
+  const isLoading = profileLoading || recentLoading || statsLoading;
+  const isError = profileError || recentError || statsError;
 
-  if (isLoading || !profile) return <LoadingPanel label="Loading profile" />;
+  if (isError) return (
+    <div role="alert" className="rounded-md bg-destructive/10 p-6 text-center">
+      <p className="font-medium text-destructive">Failed to load content</p>
+      <p className="mt-2 text-sm text-muted-foreground">
+        Please try refreshing the page. If the issue persists, contact support.
+      </p>
+    </div>
+  );
+  if (isLoading) return (
+    <div role="status" aria-label="Loading profile" className="space-y-6">
+      <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
+        <div className="h-64 animate-pulse rounded-lg bg-primary/10" />
+        <div className="h-64 animate-pulse rounded-lg bg-primary/10" />
+      </div>
+      <span className="sr-only">Loading...</span>
+    </div>
+  );
+  if (!profile) return (
+    <div role="status" className="rounded-md bg-muted/10 p-6 text-center">
+      <p className="font-medium text-muted-foreground">Profile data is not available yet.</p>
+    </div>
+  );
 
   return (
     <>
       <PageHeader
-        eyebrow="profile"
         title={profile.name}
         description={profile.email ?? ""}
         action={<Badge>IRS {profile.irs}</Badge>}

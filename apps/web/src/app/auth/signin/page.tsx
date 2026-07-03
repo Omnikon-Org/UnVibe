@@ -42,7 +42,7 @@ export default function SignInPage() {
   if (loading) return <LoadingPanel label="Signing in" />;
 
   return (
-    <main className="surface-grid flex min-h-screen items-center justify-center p-4">
+    <main className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-md bg-card/95 backdrop-blur">
         <CardHeader>
           <Link href="/" className="mb-6 flex items-center gap-3">
@@ -55,11 +55,11 @@ export default function SignInPage() {
           <p className="text-sm text-muted-foreground">Enter your email to begin training.</p>
         </CardHeader>
         <CardContent className="space-y-3">
-          <Button className="w-full" variant="outline" onClick={() => oauthSignIn("github", { redirectTo: "/app/dashboard" })}>
+          <Button className="w-full" variant="outline" onClick={() => oauthSignIn("github", { callbackUrl: "/app/dashboard" })}>
             <Github className="h-4 w-4" />
             Continue with GitHub
           </Button>
-          <Button className="w-full" variant="outline" onClick={() => oauthSignIn("google", { redirectTo: "/app/dashboard" })}>
+          <Button className="w-full" variant="outline" onClick={() => oauthSignIn("google", { callbackUrl: "/app/dashboard" })}>
             <Mail className="h-4 w-4" />
             Continue with Google
           </Button>
@@ -67,12 +67,14 @@ export default function SignInPage() {
             <Input
               placeholder="email@company.com"
               type="email"
+              maxLength={255}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
             <Input
               placeholder="Password"
               type="password"
+              maxLength={128}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />

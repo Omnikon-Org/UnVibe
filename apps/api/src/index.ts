@@ -48,10 +48,15 @@ const prisma = new PrismaClient();
 // ---------------------------------------------------------------------------
 
 const redisUrl = process.env.REDIS_URL || "redis://localhost:6379";
-const connectionOpts = {
-  host: redisUrl.split("://")[1]?.split(":")[0] || "localhost",
-  port: parseInt(redisUrl.split(":")[2]) || 6379,
-};
+function parseRedisUrl(url: string): { host: string; port: number } {
+  try {
+    const parsed = new URL(url);
+    return { host: parsed.hostname || "localhost", port: parseInt(parsed.port) || 6379 };
+  } catch {
+    return { host: "localhost", port: 6379 };
+  }
+}
+const connectionOpts = parseRedisUrl(redisUrl);
 
 /**
  * Quick TCP connectivity check — avoids BullMQ's infinite retry spam when
@@ -140,7 +145,8 @@ const httpServer = createServer(app);
 // Socket.io
 const io = new Server(httpServer, {
   cors: {
-    origin: "*",
+    origin: process.env.CORS_ORIGIN ?? "http://localhost:3000",
+    credentials: true,
   },
 });
 
@@ -151,7 +157,7 @@ io.on("connection", (socket) => {
   });
 });
 
-app.use(cors());
+app.use(cors({ origin: "http://localhost:3000", credentials: true }));
 app.use(express.json());
 
 // Sentry handler (request)

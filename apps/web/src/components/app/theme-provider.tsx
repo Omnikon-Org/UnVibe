@@ -17,11 +17,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         style={
           darkMode
             ? {
-                background: "radial-gradient(125% 125% at 50% 100%, #000000 40%, #010133 100%)",
+                background: "radial-gradient(125% 125% at 50% 100%, hsl(220 24% 6%) 40%, hsl(188 91% 35% / 0.12) 100%)",
               }
             : {
-                backgroundImage: "radial-gradient(125% 125% at 50% 90%, #ffffff 40%, #ec4899 100%)",
-                backgroundSize: "100% 100%",
+                background: "radial-gradient(125% 125% at 50% 90%, hsl(210 25% 98%) 40%, hsl(188 91% 35% / 0.08) 100%)",
               }
         }
       />

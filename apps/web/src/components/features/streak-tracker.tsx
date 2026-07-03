@@ -9,7 +9,7 @@ export function StreakTracker({ streak }: { streak: number }) {
       </CardHeader>
       <CardContent>
         <div className="flex items-end gap-3">
-          <Flame className="h-8 w-8 text-amber-400" />
+          <Flame className="h-8 w-8 text-accent" />
           <div>
             <p className="text-4xl font-semibold">{streak}</p>
             <p className="text-sm text-muted-foreground">days in training</p>

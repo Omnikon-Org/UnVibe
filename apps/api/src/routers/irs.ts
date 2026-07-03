@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { protectedProcedure, router, publicProcedure } from "../trpc";
 import { calculateIRS } from "../services/irs-engine";
+import { getLeaderboard } from "../services/leaderboard";
 
 export const irsRouter = router({
   getScore: protectedProcedure.query(async ({ ctx }) => {
@@ -85,17 +86,6 @@ export const irsRouter = router({
   }),
 
   getLeaderboard: publicProcedure.query(async ({ ctx }) => {
-    const scores = await ctx.prisma.iRSScore.findMany({
-      include: { user: { select: { name: true, image: true } } },
-      orderBy: { score: "desc" },
-      take: 50,
-    });
-    return scores.map((s, i) => ({
-      rank: i + 1,
-      userId: s.userId,
-      name: s.user.name ?? "Anonymous",
-      avatar: s.user.image,
-      score: s.score,
-    }));
+    return getLeaderboard(ctx.prisma, 50);
   }),
 });

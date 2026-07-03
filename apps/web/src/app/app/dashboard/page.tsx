@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { ArrowRight, Clock, Target, Trophy } from "lucide-react";
+import { TRPCClientError } from "@trpc/client";
 import { PageHeader } from "@/components/app/page-header";
-import { LoadingPanel } from "@/components/app/loading-panel";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -13,22 +15,68 @@ import { Leaderboard } from "@/components/features/leaderboard";
 import { StreakTracker } from "@/components/features/streak-tracker";
 
 export default function DashboardPage() {
-  const { data: profile, isLoading: profileLoading } = trpc.profile.getProfile.useQuery();
-  const { data: tracks } = trpc.tracks.getAll.useQuery();
-  const { data: leaderboard } = trpc.warRoom.getLeaderboard.useQuery();
-  const { data: stats } = trpc.profile.getStats.useQuery();
+  const router = useRouter();
 
-  if (profileLoading) return <LoadingPanel />;
+  const profileQuery = trpc.profile.getProfile.useQuery();
+  const tracksQuery = trpc.tracks.getAll.useQuery();
+  const leaderboardQuery = trpc.warRoom.getLeaderboard.useQuery();
+  const statsQuery = trpc.profile.getStats.useQuery();
+
+  const { data: profile, isLoading: profileLoading } = profileQuery;
+  const { data: tracks, isLoading: tracksLoading } = tracksQuery;
+  const { data: leaderboard, isLoading: leaderboardLoading } = leaderboardQuery;
+  const { data: stats, isLoading: statsLoading } = statsQuery;
+
+  const queries = [profileQuery, tracksQuery, leaderboardQuery, statsQuery];
+  const isLoading = queries.some((q) => q.isLoading);
+  const hasUnauthorized = queries.some(
+    (q) => q.error && (q.error as TRPCClientError<any>).data?.code === "UNAUTHORIZED",
+  );
+
+  useEffect(() => {
+    if (hasUnauthorized) {
+      router.push("/auth/signin?callbackUrl=" + encodeURIComponent(window.location.pathname));
+    }
+  }, [hasUnauthorized, router]);
+
+  if (hasUnauthorized) return null;
+
+  const isError = queries.some((q) => q.isError);
+
+  if (isError) {
+    const nonAuthErrors = queries.some(
+      (q) => q.error && (q.error as TRPCClientError<any>).data?.code !== "UNAUTHORIZED",
+    );
+    if (nonAuthErrors) {
+      return (
+        <div role="alert" className="rounded-md bg-destructive/10 p-6 text-center">
+          <p className="font-medium text-destructive">Failed to load content</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Please try refreshing the page. If the issue persists, contact support.
+          </p>
+        </div>
+      );
+    }
+  }
+  if (isLoading) return (
+    <div role="status" aria-label="Loading dashboard" className="space-y-6">
+      <div className="grid gap-4 md:grid-cols-3">
+        {Array.from({ length: 3 }, (_, i) => (
+          <div key={i} className="h-32 animate-pulse rounded-lg bg-primary/10" />
+        ))}
+      </div>
+      <span className="sr-only">Loading...</span>
+    </div>
+  );
+  if (!profile || !tracks || !leaderboard || !stats) return (
+    <div role="status" className="rounded-md bg-muted/10 p-6 text-center">
+      <p className="font-medium text-muted-foreground">Complete your first module to see stats here</p>
+    </div>
+  );
 
   const activeTrack = tracks?.[0] ?? null;
   const userRank = leaderboard?.findIndex((entry) => entry.userId === profile?.id) ?? -1;
   const rankDisplay = userRank >= 0 ? `#${userRank + 1}` : "--";
-
-  const statCards = [
-    { label: "IRS", value: profile?.irs ?? 0, copy: "Irreplaceability score", icon: Trophy },
-    { label: "Rank", value: rankDisplay, copy: "War Room placement", icon: Target },
-    { label: "Focus", value: "34m", copy: "Next module estimate", icon: Clock },
-  ];
 
   const leaderboardEntries = (leaderboard ?? []).map((entry) => ({
     id: entry.userId,
@@ -41,36 +89,59 @@ export default function DashboardPage() {
   return (
     <>
       <PageHeader
-        eyebrow="dashboard"
         title="Training status"
-        description="Mock data mirrors the future API shape while the backend catches up."
+        description="Track your training progress, streaks, and leaderboard ranking."
         action={
           <Button asChild>
-            <Link href="/app/tracks/frontend-systems/modules/auth-guard-rebuild">
-              Resume module
+            <Link
+              href={
+                activeTrack?.modules?.[0]
+                  ? `/app/tracks/${activeTrack.id}/modules/${activeTrack.modules[0].id}`
+                  : "/app/tracks"
+              }
+            >
+              {activeTrack?.modules?.[0] ? "Resume module" : "Browse tracks"}
               <ArrowRight className="h-4 w-4" />
             </Link>
           </Button>
         }
       />
-      <div className="grid gap-4 md:grid-cols-3">
-        {statCards.map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <Card key={stat.label}>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  {stat.label}
-                  <Icon className="h-4 w-4 text-primary" />
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-semibold">{stat.value}</p>
-                <p className="mt-1 text-sm text-muted-foreground">{stat.copy}</p>
-              </CardContent>
-            </Card>
-          );
-        })}
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              IRS <Trophy className="h-4 w-4 text-primary" />
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-semibold">{profile?.irs ?? 0}</p>
+            <p className="mt-1 text-sm text-muted-foreground">Irreplaceability score</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              Rank <Target className="h-4 w-4 text-primary" />
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-semibold">{rankDisplay}</p>
+            <p className="mt-1 text-sm text-muted-foreground">War Room placement</p>
+          </CardContent>
+        </Card>
+        <div className="col-span-full mt-1 sm:col-span-1 sm:mt-0">
+          <Card className="border-accent/40 bg-accent/[0.03]">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                Next <Clock className="h-4 w-4 text-accent" />
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-semibold">34m</p>
+              <p className="mt-1 text-sm text-muted-foreground">Estimated module time</p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
       <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_360px]">
         <Card>

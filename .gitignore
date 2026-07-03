@@ -32,6 +32,7 @@ __pycache__/
 # Build outputs
 dist/
 build/
+*.tsbuildinfo
 
 # Logs
 npm-debug.log*
@@ -39,8 +40,19 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# TypeScript incremental build info
-*.tsbuildinfo
-
 # Sentry
 .sentry-clirc
+
+# Python testing artifacts
+.pytest_cache/
+*.egg-info/
+
+# AI-generated planning artifacts
+.planning/
+PLAN.md
+REVIEW*.md
+UI-*.md
+
+# OS files
+.DS_Store
+Thumbs.db

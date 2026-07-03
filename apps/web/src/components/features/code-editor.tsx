@@ -20,7 +20,7 @@ export function CodeEditor({
   return (
     <div className="overflow-hidden rounded-lg border border-border bg-card">
       <div className="flex items-center justify-between border-b border-border px-3 py-2">
-        <span className="font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground">
+        <span className="font-mono text-xs text-muted-foreground">
           {language}
         </span>
         {onReset ? (

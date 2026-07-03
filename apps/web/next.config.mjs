@@ -7,6 +7,22 @@ dotenv.config({ path: "../../.env.local" });
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+
+  // Proxy /trpc and /socket.io to the API server (port 3001).
+  // This ensures same-origin requests, allowing httpOnly cookies for session tokens
+  // instead of storing tokens in localStorage (mitigating XSS vector WR-07).
+  async rewrites() {
+    return [
+      {
+        source: "/trpc/:path*",
+        destination: "http://localhost:3001/trpc/:path*",
+      },
+      {
+        source: "/socket.io/:path*",
+        destination: "http://localhost:3001/socket.io/:path*",
+      },
+    ];
+  },
 };
 
 const isMockSentry = !process.env.SENTRY_DSN_WEB || process.env.SENTRY_DSN_WEB.includes("example");
