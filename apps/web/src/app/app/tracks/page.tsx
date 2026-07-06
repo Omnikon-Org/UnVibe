@@ -3,20 +3,19 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
-import { LoadingPanel } from "@/components/app/loading-panel";
+import { SkeletonLoader } from "@/components/ui/skeleton-loader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc/client";
 
 export default function TracksPage() {
   const { data: tracks, isLoading } = trpc.tracks.getAll.useQuery();
 
-  if (isLoading || !tracks) return <LoadingPanel />;
+  if (isLoading || !tracks) return <SkeletonLoader variant="tracks" />;
 
   if (tracks.length === 0) {
     return (
       <>
         <PageHeader
-          eyebrow="tracks"
           title="Choose a training path"
           description="Select a track to begin training with real modules."
         />
@@ -33,7 +32,6 @@ export default function TracksPage() {
   return (
     <>
       <PageHeader
-        eyebrow="tracks"
         title="Choose a training path"
         description="Select a track to begin training with real modules."
       />

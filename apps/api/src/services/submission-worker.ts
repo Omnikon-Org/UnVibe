@@ -128,44 +128,11 @@ export function createSubmissionWorker(
 // ---------------------------------------------------------------------------
 
 async function triggerIRSRecalculation(prisma: PrismaClient, userId: string): Promise<void> {
-  // Calculate aggregate score from all scored submissions
-  const submissions = await prisma.submission.findMany({
-    where: { userId, status: "scored" },
-    select: { feedback: true },
-  });
-
-  let totalScore = 0;
-  let scoredCount = 0;
-
-  for (const sub of submissions) {
-    if (sub.feedback) {
-      try {
-        const parsed = JSON.parse(sub.feedback);
-        if (typeof parsed.overallScore === "number") {
-          totalScore += parsed.overallScore;
-          scoredCount++;
-        }
-      } catch {
-        // Skip unparseable feedback
-      }
-    }
-  }
-
-  const averageScore = scoredCount > 0 ? Math.round((totalScore / scoredCount) * 100) : 0;
-
-  // Create or update the latest IRS score
+  const result = await calculateIRS(prisma, userId);
   await prisma.iRSScore.create({
-    data: {
-      userId,
-      score: averageScore,
-      details: {
-        submissionsScored: scoredCount,
-        lastCalculated: new Date().toISOString(),
-      },
-    },
+    data: { userId, score: result.score, details: result.details },
   });
-
-  logger.info({ userId, averageScore, scoredCount }, "IRS score recalculated");
+  logger.info({ userId, averageScore: result.score, submissionsScored: result.submissionsScored }, "IRS score recalculated");
 }
 
 // ---------------------------------------------------------------------------
@@ -202,7 +169,9 @@ async function scheduleDefendSession(
     logger.info({ userId, moduleId, submissionId }, "Defend session scheduled");
     return true;
   } catch (err) {
-    logger.error({ err, userId, moduleId }, "Failed to schedule defend session");
+    // Handle race condition gracefully — either the session was already created
+    // by a concurrent worker, or there was a DB error
+    logger.warn({ err, userId, moduleId }, "Failed to schedule defend session (may be duplicate)");
     return false;
   }
 }

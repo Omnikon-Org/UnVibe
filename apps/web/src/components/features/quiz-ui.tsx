@@ -13,7 +13,7 @@ export function QuizUI({ questions }: { questions: QuizQuestion[] }) {
 
   if (complete) {
     return (
-      <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-300">
+      <div className="rounded-lg border border-success/30 bg-success/10 p-4 text-sm text-success">
         Quiz complete. Rebuild is unlocked.
       </div>
     );
@@ -33,7 +33,7 @@ export function QuizUI({ questions }: { questions: QuizQuestion[] }) {
               className={cn(
                 "rounded-md border border-border bg-background/60 p-3 text-left text-sm transition hover:bg-muted",
                 picked && "border-primary text-primary",
-                correct && "border-emerald-500/40 bg-emerald-500/10 text-emerald-300",
+                correct && "border-success/40 bg-success/10 text-success",
               )}
             >
               {option}

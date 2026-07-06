@@ -1,7 +1,7 @@
 "use client";
 
 import { PageHeader } from "@/components/app/page-header";
-import { LoadingPanel } from "@/components/app/loading-panel";
+import { SkeletonLoader } from "@/components/ui/skeleton-loader";
 import { ModulePlayer } from "@/components/features/module-player";
 import { trpc } from "@/lib/trpc/client";
 
@@ -11,7 +11,7 @@ export function ModulePageContent({ trackId, moduleId }: { trackId: string; modu
 
   const isLoading = trackLoading || moduleLoading;
 
-  if (isLoading || !dbModule) return <LoadingPanel label="Loading module player" />;
+  if (isLoading || !dbModule) return <SkeletonLoader variant="module" />;
 
   const moduleForPlayer = {
     id: dbModule.id,

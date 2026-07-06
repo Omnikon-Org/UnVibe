@@ -8,17 +8,9 @@ import * as Sentry from "@sentry/node";
 import { PrismaClient } from "@prisma/client";
 import { Queue } from "bullmq";
 import net from "net";
-import { router, publicProcedure } from "./trpc";
 import { createContext } from "./context";
 import { createSubmissionWorker } from "./services/submission-worker";
-import { authRouter } from "./routers/auth";
-import { tracksRouter } from "./routers/tracks";
-import { modulesRouter } from "./routers/modules";
-import { irsRouter } from "./routers/irs";
-import { warRoomRouter } from "./routers/warRoom";
-import { submissionsRouter } from "./routers/submissions";
-import { profileRouter } from "./routers/profile";
-import { judge0Router } from "./routers/judge0";
+import { appRouter, type AppRouter } from "./router";
 import dotenv from "dotenv";
 
 dotenv.config({ path: "../../.env.local" });
@@ -48,10 +40,15 @@ const prisma = new PrismaClient();
 // ---------------------------------------------------------------------------
 
 const redisUrl = process.env.REDIS_URL || "redis://localhost:6379";
-const connectionOpts = {
-  host: redisUrl.split("://")[1]?.split(":")[0] || "localhost",
-  port: parseInt(redisUrl.split(":")[2]) || 6379,
-};
+function parseRedisUrl(url: string): { host: string; port: number } {
+  try {
+    const parsed = new URL(url);
+    return { host: parsed.hostname || "localhost", port: parseInt(parsed.port) || 6379 };
+  } catch {
+    return { host: "localhost", port: 6379 };
+  }
+}
+const connectionOpts = parseRedisUrl(redisUrl);
 
 /**
  * Quick TCP connectivity check — avoids BullMQ's infinite retry spam when
@@ -117,31 +114,25 @@ initRedisDeps().catch((err) => {
   logger.error({ err }, "Unexpected error during Redis initialization");
 });
 
-// tRPC router
-const appRouter = router({
-  health: publicProcedure.query(() => {
-    return { status: "ok", timestamp: new Date() };
-  }),
-  auth: authRouter,
-  tracks: tracksRouter,
-  modules: modulesRouter,
-  submissions: submissionsRouter,
-  irs: irsRouter,
-  warRoom: warRoomRouter,
-  profile: profileRouter,
-  judge0: judge0Router,
-});
-
-export type AppRouter = typeof appRouter;
-
 const app = express();
 const httpServer = createServer(app);
 
+const allowedOrigins = (process.env.CORS_ORIGIN ?? "")
+  .split(",")
+  .map((o) => o.trim())
+  .filter(Boolean);
+
+const corsOptions: cors.CorsOptions = {
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+    callback(new Error(`CORS: origin '${origin}' not allowed`));
+  },
+  credentials: true,
+};
+
 // Socket.io
 const io = new Server(httpServer, {
-  cors: {
-    origin: "*",
-  },
+  cors: { origin: allowedOrigins, credentials: true },
 });
 
 io.on("connection", (socket) => {
@@ -151,7 +142,7 @@ io.on("connection", (socket) => {
   });
 });
 
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Sentry handler (request)

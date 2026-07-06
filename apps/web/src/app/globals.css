@@ -31,6 +31,10 @@
     --border: 214 20% 84%;
     --input: 214 20% 84%;
     --ring: 188 91% 35%;
+    --success: 152 76% 40%;
+    --success-foreground: 0 0% 100%;
+    --warning: 35 92% 55%;
+    --warning-foreground: 0 0% 100%;
 
     --radius: 0.5rem;
     --gradient-radial: radial-gradient(125% 125% at 50% 90%, #ffffff 40%, #ec4899 100%);
@@ -64,6 +68,10 @@
     --border: 218 16% 21%;
     --input: 218 16% 21%;
     --ring: 187 85% 52%;
+    --success: 152 76% 36%;
+    --success-foreground: 0 0% 100%;
+    --warning: 35 92% 50%;
+    --warning-foreground: 0 0% 100%;
     --gradient-radial: radial-gradient(125% 125% at 50% 100%, #000000 40%, #010133 100%);
   }
 }
@@ -82,14 +90,38 @@
 }
 
 @layer utilities {
-  .surface-grid {
-    background-image:
-      linear-gradient(hsl(var(--border) / 0.3) 1px, transparent 1px),
-      linear-gradient(90deg, hsl(var(--border) / 0.3) 1px, transparent 1px);
-    background-size: 28px 28px;
-  }
-
   .text-balance {
     text-wrap: balance;
   }
+}
+
+/* ── Custom scrollbar styling ── */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 5px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #777;
 }

@@ -6,7 +6,6 @@ const config: Config = {
   roots: ["<rootDir>/src"],
   testMatch: ["**/__tests__/**/*.test.ts"],
   clearMocks: true,
-  collectCoverageFrom: ["src/services/**/*.ts", "!src/__tests__/**"],
 };
 
 export default config;

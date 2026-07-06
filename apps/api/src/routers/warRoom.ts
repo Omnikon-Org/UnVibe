@@ -1,14 +1,15 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { publicProcedure, protectedProcedure, router } from "../trpc";
+import { getLeaderboard } from "../services/leaderboard";
 
 export const warRoomRouter = router({
   getRoom: publicProcedure.query(async ({ ctx }) => {
     const room = await ctx.prisma.warRoom.findFirst({
       orderBy: { createdAt: "desc" },
     });
-    if (!room) throw new TRPCError({ code: "NOT_FOUND", message: "No active war room" });
-    return room;
+    // Return null instead of throwing, so the frontend can show a meaningful empty state
+    return room ?? null;
   }),
 
   getMessages: publicProcedure
@@ -20,18 +21,7 @@ export const warRoomRouter = router({
     }),
 
   getLeaderboard: publicProcedure.query(async ({ ctx }) => {
-    const scores = await ctx.prisma.iRSScore.findMany({
-      include: { user: { select: { name: true, image: true } } },
-      orderBy: { score: "desc" },
-      take: 20,
-    });
-    return scores.map((s, i) => ({
-      rank: i + 1,
-      userId: s.userId,
-      name: s.user.name ?? "Anonymous",
-      avatar: s.user.image,
-      score: s.score,
-    }));
+    return getLeaderboard(ctx.prisma, 20);
   }),
 
   joinRoom: protectedProcedure.input(z.object({ roomId: z.string() })).mutation(async ({ ctx, input }) => {

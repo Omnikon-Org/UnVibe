@@ -7,35 +7,28 @@ import { trpc } from "./client";
  */
 
 export function useDashboardData() {
-  return trpc.health.useQuery();
+  return trpc.tracks.getAll.useQuery();
 }
 
 export function useTracksData() {
-  // Placeholder — returns empty until tracks router is built
-  return trpc.health.useQuery();
+  return trpc.tracks.getAll.useQuery();
 }
 
 export function useModuleData(
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _trackId: string,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _moduleId: string,
+  moduleId: string,
 ) {
-  // Placeholder — returns empty until modules router is built
-  return trpc.health.useQuery();
+  return trpc.modules.getById.useQuery({ id: moduleId });
 }
 
 export function useWarRoomData() {
-  // Placeholder — returns empty until war-room router is built
-  return trpc.health.useQuery();
+  return trpc.warRoom.getRoom.useQuery();
 }
 
 export function useProfileData() {
-  // Placeholder — returns empty until profile router is built
-  return trpc.health.useQuery();
+  return trpc.profile.getProfile.useQuery();
 }
 
 export function useBlindspotsData() {
-  // Placeholder — returns empty until blindspots router is built
-  return trpc.health.useQuery();
+  return trpc.irs.getBlindspots.useQuery();
 }

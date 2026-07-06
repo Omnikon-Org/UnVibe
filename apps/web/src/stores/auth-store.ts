@@ -1,18 +1,19 @@
 "use client";
 
 import { create } from "zustand";
+import { signOut as nextAuthSignOut } from "next-auth/react";
 
-interface SessionData {
+interface UserData {
   id: string;
   name: string | null;
   email: string | null;
   image: string | null;
-  sessionToken: string | null;
 }
 
 interface AuthStore {
-  user: SessionData | null;
+  user: UserData | null;
   isLoading: boolean;
+  sessionToken: string | null;
   signIn: (email: string, password: string) => Promise<boolean>;
   signUp: (name: string, email: string, password: string) => Promise<boolean>;
   signOut: () => void;
@@ -20,17 +21,24 @@ interface AuthStore {
   restoreSession: () => void;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
+const API_URL = process.env.NEXT_PUBLIC_API_URL
+  ? `${process.env.NEXT_PUBLIC_API_URL}/trpc`
+  : "/trpc";
 
-export const useAuthStore = create<AuthStore>((set) => ({
+const SESSION_CACHE_KEY = "unvibe_user_cache";
+const SESSION_TOKEN_KEY = "unvibe_session_token";
+
+export const useAuthStore = create<AuthStore>((set, get) => ({
   user: null,
   isLoading: true,
+  sessionToken: null,
 
   restoreSession: () => {
     try {
-      const stored = localStorage.getItem("unvibe_session");
+      const stored = localStorage.getItem(SESSION_CACHE_KEY);
+      const token = localStorage.getItem(SESSION_TOKEN_KEY);
       if (stored) {
-        set({ user: JSON.parse(stored), isLoading: false });
+        set({ user: JSON.parse(stored), sessionToken: token, isLoading: false });
       } else {
         set({ isLoading: false });
       }
@@ -40,21 +48,29 @@ export const useAuthStore = create<AuthStore>((set) => ({
   },
 
   checkSession: async () => {
+    const token = get().sessionToken ?? localStorage.getItem(SESSION_TOKEN_KEY);
+    if (!token) {
+      set({ user: null, isLoading: false });
+      return;
+    }
     try {
-      const stored = localStorage.getItem("unvibe_session");
-      const token = stored ? JSON.parse(stored)?.sessionToken : null;
-      const headers: Record<string, string> = { "Content-Type": "application/json" };
-      if (token) headers["Authorization"] = `Bearer ${token}`;
-
-      const res = await fetch(`${API_URL}/trpc/auth.getSession`, { headers });
+      const res = await fetch(`${API_URL}/auth.getSession`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const json = await res.json();
       if (json?.result?.data?.user) {
-        const userData = { ...json.result.data.user, sessionToken: token };
-        set({ user: userData });
-        localStorage.setItem("unvibe_session", JSON.stringify(userData));
+        const userData: UserData = {
+          id: json.result.data.user.id,
+          name: json.result.data.user.name ?? null,
+          email: json.result.data.user.email ?? null,
+          image: json.result.data.user.image ?? null,
+        };
+        set({ user: userData, sessionToken: token });
+        localStorage.setItem(SESSION_CACHE_KEY, JSON.stringify(userData));
       } else {
-        set({ user: null });
-        localStorage.removeItem("unvibe_session");
+        set({ user: null, sessionToken: null });
+        localStorage.removeItem(SESSION_CACHE_KEY);
+        localStorage.removeItem(SESSION_TOKEN_KEY);
       }
     } catch {
       set({ user: null });
@@ -63,22 +79,23 @@ export const useAuthStore = create<AuthStore>((set) => ({
 
   signIn: async (email: string, password: string) => {
     try {
-      const res = await fetch(`${API_URL}/trpc/auth.signIn`, {
+      const res = await fetch(`${API_URL}/auth.signIn`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ "0": { email, password } }),
       });
       const json = await res.json();
-      if (json?.result?.data?.user && json?.result?.data?.sessionToken) {
-        const sessionData = {
-          id: json.result.data.user.id,
-          name: json.result.data.user.name,
-          email: json.result.data.user.email,
-          image: json.result.data.user.image ?? null,
-          sessionToken: json.result.data.sessionToken,
+      if (json?.result?.data?.user) {
+        const { user, sessionToken } = json.result.data;
+        const userData: UserData = {
+          id: user.id,
+          name: user.name ?? null,
+          email: user.email ?? null,
+          image: user.image ?? null,
         };
-        set({ user: sessionData });
-        localStorage.setItem("unvibe_session", JSON.stringify(sessionData));
+        set({ user: userData, sessionToken });
+        localStorage.setItem(SESSION_CACHE_KEY, JSON.stringify(userData));
+        if (sessionToken) localStorage.setItem(SESSION_TOKEN_KEY, sessionToken);
         return true;
       }
       return false;
@@ -89,22 +106,23 @@ export const useAuthStore = create<AuthStore>((set) => ({
 
   signUp: async (name: string, email: string, password: string) => {
     try {
-      const res = await fetch(`${API_URL}/trpc/auth.signUp`, {
+      const res = await fetch(`${API_URL}/auth.signUp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ "0": { name, email, password } }),
       });
       const json = await res.json();
-      if (json?.result?.data?.user && json?.result?.data?.sessionToken) {
-        const sessionData = {
-          id: json.result.data.user.id,
-          name: json.result.data.user.name,
-          email: json.result.data.user.email,
-          image: json.result.data.user.image ?? null,
-          sessionToken: json.result.data.sessionToken,
+      if (json?.result?.data?.user) {
+        const { user, sessionToken } = json.result.data;
+        const userData: UserData = {
+          id: user.id,
+          name: user.name ?? null,
+          email: user.email ?? null,
+          image: user.image ?? null,
         };
-        set({ user: sessionData });
-        localStorage.setItem("unvibe_session", JSON.stringify(sessionData));
+        set({ user: userData, sessionToken });
+        localStorage.setItem(SESSION_CACHE_KEY, JSON.stringify(userData));
+        if (sessionToken) localStorage.setItem(SESSION_TOKEN_KEY, sessionToken);
         return true;
       }
       return false;
@@ -114,20 +132,18 @@ export const useAuthStore = create<AuthStore>((set) => ({
   },
 
   signOut: async () => {
+    const token = get().sessionToken;
     try {
-      const stored = localStorage.getItem("unvibe_session");
-      const token = stored ? JSON.parse(stored)?.sessionToken : null;
-      const headers: Record<string, string> = { "Content-Type": "application/json" };
-      if (token) headers["Authorization"] = `Bearer ${token}`;
-
-      await fetch(`${API_URL}/trpc/auth.signOut`, {
+      await fetch(`${API_URL}/auth.signOut`, {
         method: "POST",
-        headers,
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
     } catch {
       // Graceful — always clear local state
     }
-    set({ user: null });
-    localStorage.removeItem("unvibe_session");
+    set({ user: null, sessionToken: null });
+    localStorage.removeItem(SESSION_CACHE_KEY);
+    localStorage.removeItem(SESSION_TOKEN_KEY);
+    await nextAuthSignOut({ redirect: false });
   },
 }));
