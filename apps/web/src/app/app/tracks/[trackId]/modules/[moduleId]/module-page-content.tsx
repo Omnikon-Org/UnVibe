@@ -29,9 +29,8 @@ export function ModulePageContent({ trackId, moduleId }: { trackId: string; modu
   return (
     <>
       <PageHeader
-        eyebrow={trackData?.title ?? "Track"}
         title={dbModule.title}
-        description={dbModule.content}
+        description={`${trackData?.title ?? "Track"} · ${dbModule.content}`}
       />
       <ModulePlayer module={moduleForPlayer} moduleId={moduleId} annotations={[]} quiz={[]} diffLines={[]} />
     </>
