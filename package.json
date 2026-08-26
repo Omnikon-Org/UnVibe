@@ -24,7 +24,6 @@
     "onlyBuiltDependencies": [
       "@prisma/client",
       "@prisma/engines",
-      "@sentry/cli",
       "esbuild",
       "msgpackr-extract",
       "prisma",

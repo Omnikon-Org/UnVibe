@@ -15,9 +15,9 @@ const USER_CACHE_KEY = "unvibe_user_cache";
  * session, creates a DB session via the tRPC API (which sets an httpOnly
  * cookie), and caches user profile data in the auth-store.
  *
- * The session token itself never touches localStorage — it's only in the
- * httpOnly cookie. User profile data is cached in localStorage for fast
- * initial render (not sensitive — no token).
+ * Tokens never touch localStorage — they live only in cookies. User
+ * profile data is cached in localStorage for fast initial render
+ * (not sensitive — no token).
  *
  * Place this near the root of the app (inside the SessionProvider).
  */
@@ -38,22 +38,22 @@ export function SessionSync() {
 
     const user = session.user;
 
-    // Fetch an auth proof token before calling linkOAuth
+    // linkOAuth rejects unsigned identities — always fetch a fresh proof
     async function performLink() {
-      let nextAuthProof: string | undefined;
+      let nextAuthProof: string;
       try {
         const proofRes = await fetch("/api/auth/issue-link-token", { method: "POST" });
-        if (proofRes.ok) {
-          const proofData = await proofRes.json();
-          nextAuthProof = proofData.token;
-        }
+        if (!proofRes.ok) throw new Error(`proof request failed (${proofRes.status})`);
+        const proofData = await proofRes.json();
+        nextAuthProof = proofData.token;
       } catch {
-        // Fall back to legacy behavior if proof endpoint unavailable
+        synced.current = false;
+        return;
       }
 
       linkMutation.mutate(
         {
-          id: user.id ?? "",
+          id: user.id,
           name: user.name ?? null,
           email: user.email ?? null,
           image: user.image ?? null,
@@ -68,14 +68,8 @@ export function SessionSync() {
                 email: data.user.email ?? null,
                 image: data.user.image ?? null,
               };
-              useAuthStore.setState({
-                user: userData,
-                sessionToken: data.sessionToken ?? null,
-              });
+              useAuthStore.setState({ user: userData });
               localStorage.setItem(USER_CACHE_KEY, JSON.stringify(userData));
-              if (data.sessionToken) {
-                localStorage.setItem("unvibe_session_token", data.sessionToken);
-              }
             }
           },
           onError: () => {

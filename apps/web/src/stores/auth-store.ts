@@ -13,7 +13,6 @@ interface UserData {
 interface AuthStore {
   user: UserData | null;
   isLoading: boolean;
-  sessionToken: string | null;
   signIn: (email: string, password: string) => Promise<boolean>;
   signUp: (name: string, email: string, password: string) => Promise<boolean>;
   signOut: () => void;
@@ -21,24 +20,21 @@ interface AuthStore {
   restoreSession: () => void;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL
-  ? `${process.env.NEXT_PUBLIC_API_URL}/trpc`
-  : "/trpc";
+// Requests always go through the same-origin /trpc proxy so the httpOnly
+// session cookie authenticates them — no session token is stored client-side.
+const API_URL = "/trpc";
 
 const SESSION_CACHE_KEY = "unvibe_user_cache";
-const SESSION_TOKEN_KEY = "unvibe_session_token";
 
 export const useAuthStore = create<AuthStore>((set, get) => ({
   user: null,
   isLoading: true,
-  sessionToken: null,
 
   restoreSession: () => {
     try {
       const stored = localStorage.getItem(SESSION_CACHE_KEY);
-      const token = localStorage.getItem(SESSION_TOKEN_KEY);
       if (stored) {
-        set({ user: JSON.parse(stored), sessionToken: token, isLoading: false });
+        set({ user: JSON.parse(stored), isLoading: false });
       } else {
         set({ isLoading: false });
       }
@@ -48,15 +44,14 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   },
 
   checkSession: async () => {
-    const token = get().sessionToken ?? localStorage.getItem(SESSION_TOKEN_KEY);
-    if (!token) {
-      set({ user: null, isLoading: false });
+    // Nothing to validate unless an earlier session cached a profile
+    if (!get().user && !localStorage.getItem(SESSION_CACHE_KEY)) {
+      set({ isLoading: false });
       return;
     }
     try {
-      const res = await fetch(`${API_URL}/auth.getSession`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      // The httpOnly cookie identifies the session — no Authorization header
+      const res = await fetch(`${API_URL}/auth.getSession`);
       const json = await res.json();
       if (json?.result?.data?.user) {
         const userData: UserData = {
@@ -65,12 +60,11 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
           email: json.result.data.user.email ?? null,
           image: json.result.data.user.image ?? null,
         };
-        set({ user: userData, sessionToken: token });
+        set({ user: userData });
         localStorage.setItem(SESSION_CACHE_KEY, JSON.stringify(userData));
       } else {
-        set({ user: null, sessionToken: null });
+        set({ user: null });
         localStorage.removeItem(SESSION_CACHE_KEY);
-        localStorage.removeItem(SESSION_TOKEN_KEY);
       }
     } catch {
       set({ user: null });
@@ -86,16 +80,15 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       });
       const json = await res.json();
       if (json?.result?.data?.user) {
-        const { user, sessionToken } = json.result.data;
+        const user = json.result.data.user;
         const userData: UserData = {
           id: user.id,
           name: user.name ?? null,
           email: user.email ?? null,
           image: user.image ?? null,
         };
-        set({ user: userData, sessionToken });
+        set({ user: userData });
         localStorage.setItem(SESSION_CACHE_KEY, JSON.stringify(userData));
-        if (sessionToken) localStorage.setItem(SESSION_TOKEN_KEY, sessionToken);
         return true;
       }
       return false;
@@ -113,16 +106,15 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       });
       const json = await res.json();
       if (json?.result?.data?.user) {
-        const { user, sessionToken } = json.result.data;
+        const user = json.result.data.user;
         const userData: UserData = {
           id: user.id,
           name: user.name ?? null,
           email: user.email ?? null,
           image: user.image ?? null,
         };
-        set({ user: userData, sessionToken });
+        set({ user: userData });
         localStorage.setItem(SESSION_CACHE_KEY, JSON.stringify(userData));
-        if (sessionToken) localStorage.setItem(SESSION_TOKEN_KEY, sessionToken);
         return true;
       }
       return false;
@@ -132,18 +124,13 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   },
 
   signOut: async () => {
-    const token = get().sessionToken;
     try {
-      await fetch(`${API_URL}/auth.signOut`, {
-        method: "POST",
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
+      await fetch(`${API_URL}/auth.signOut`, { method: "POST" });
     } catch {
       // Graceful — always clear local state
     }
-    set({ user: null, sessionToken: null });
+    set({ user: null });
     localStorage.removeItem(SESSION_CACHE_KEY);
-    localStorage.removeItem(SESSION_TOKEN_KEY);
     await nextAuthSignOut({ redirect: false });
   },
 }));

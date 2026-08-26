@@ -49,7 +49,7 @@ export function setSessionCookie(res: Response | undefined, token: string): void
     secure: process.env.NODE_ENV === "production",
     sameSite: "strict",
     path: "/",
-    maxAge: SESSION_TTL_MS / 1000, // maxAge is in seconds for cookies
+    maxAge: SESSION_TTL_MS, // express measures maxAge in milliseconds
   });
 }
 
@@ -69,15 +69,11 @@ export function clearSessionCookie(res: Response | undefined): void {
 // ---------------------------------------------------------------------------
 // Token extraction
 //
-// This is the ONLY place that knows about transport conventions.
-// To switch from Authorization header to cookie (or vice versa), change this
-// function alone — nothing else in the auth stack needs to move.
-//
 // Current strategy (precedence order):
-//   1. unvibe_session_token cookie          — httpOnly cookie (used via Next.js rewrites)
-//   2. Authorization: Bearer <token>        — explicit header (Server Components, API clients)
-//   3. authjs.session-token cookie          — forwarded Auth.js cookie (browser requests)
+//   1. unvibe_session_token cookie     — httpOnly cookie (web app via rewrites)
+//   2. Authorization: Bearer <token>   — explicit header (external API clients)
 // ---------------------------------------------------------------------------
+
 export function extractSessionToken(req: Request): string | null {
   const cookieHeader = req.headers.cookie;
 
@@ -89,22 +85,10 @@ export function extractSessionToken(req: Request): string | null {
     }
   }
 
-  // 2. Bearer token header
+  // 2. Bearer token header (kept for non-browser API clients)
   const authHeader = req.headers.authorization;
   if (authHeader?.startsWith("Bearer ")) {
     return authHeader.slice(7).trim() || null;
-  }
-
-  // 3. Auth.js session cookie (dev name; prod uses __Secure-authjs.session-token)
-  if (cookieHeader) {
-    const match =
-      // production (Secure prefix)
-      cookieHeader.match(/(?:^|;\s*)__Secure-authjs\.session-token=([^;]+)/) ??
-      // development
-      cookieHeader.match(/(?:^|;\s*)authjs\.session-token=([^;]+)/);
-    if (match?.[1]) {
-      return decodeURIComponent(match[1]);
-    }
   }
 
   return null;

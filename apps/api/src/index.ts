@@ -4,7 +4,6 @@ import * as trpcExpress from "@trpc/server/adapters/express";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import pino from "pino";
-import * as Sentry from "@sentry/node";
 import { PrismaClient } from "@prisma/client";
 import { Queue } from "bullmq";
 import net from "net";
@@ -23,14 +22,6 @@ const logger = pino({
     },
   },
 });
-
-// Initialize Sentry
-if (process.env.SENTRY_DSN_API) {
-  Sentry.init({
-    dsn: process.env.SENTRY_DSN_API,
-    tracesSampleRate: 1.0,
-  });
-}
 
 // Initialize Prisma
 const prisma = new PrismaClient();
@@ -145,11 +136,6 @@ io.on("connection", (socket) => {
 app.use(cors(corsOptions));
 app.use(express.json());
 
-// Sentry handler (request)
-if (process.env.SENTRY_DSN_API) {
-  app.use(Sentry.Handlers.requestHandler());
-}
-
 // tRPC express middleware
 app.use(
   "/trpc",
@@ -163,11 +149,6 @@ app.use(
 app.get("/health", (req, res) => {
   res.json({ status: "ok", service: "api" });
 });
-
-// Sentry handler (errors)
-if (process.env.SENTRY_DSN_API) {
-  app.use(Sentry.Handlers.errorHandler());
-}
 
 const PORT = process.env.PORT || 3001;
 httpServer.listen(PORT, () => {

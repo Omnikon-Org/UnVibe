@@ -111,7 +111,6 @@ See `.env.example` for complete configuration options including:
 - GitHub & Google OAuth credentials
 - Upstash Redis/PostgreSQL connection strings
 - Cloudflare R2 storage credentials
-- Sentry monitoring DSNs
 - PostHog analytics key
 
 ---

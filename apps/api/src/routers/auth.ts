@@ -1,4 +1,4 @@
-import { randomBytes, createHmac } from "node:crypto";
+import { randomBytes, createHmac, timingSafeEqual } from "node:crypto";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { TRPCError } from "@trpc/server";
@@ -11,6 +11,26 @@ function generateSessionToken(): string {
 
 function createSessionExpiry(): Date {
   return new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+}
+
+/**
+ * Shape returned over the wire. Never return raw Prisma User rows —
+ * they carry passwordHash.
+ */
+interface PublicUser {
+  id: string;
+  name: string | null;
+  email: string | null;
+  image: string | null;
+}
+
+function publicUser(user: {
+  id: string;
+  name: string | null;
+  email: string | null;
+  image: string | null;
+}): PublicUser {
+  return { id: user.id, name: user.name, email: user.email, image: user.image };
 }
 
 export const authRouter = router({
@@ -45,7 +65,7 @@ export const authRouter = router({
       // Set httpOnly session cookie (mitigates XSS vector WR-07)
       setSessionCookie(ctx.res, sessionToken);
 
-      return { user, sessionToken };
+      return { user: publicUser(user) };
     }),
 
   signUp: publicProcedure
@@ -83,47 +103,70 @@ export const authRouter = router({
       // Set httpOnly session cookie (mitigates XSS vector WR-07)
       setSessionCookie(ctx.res, sessionToken);
 
-      return { user, sessionToken };
+      return { user: publicUser(user) };
     }),
 
   /**
    * Creates a DB session for an OAuth-authenticated user.
    * Called by the web app after NextAuth OAuth completes,
    * bridging the OAuth session to the Express API's session system.
+   *
+   * REQUIRES a signed proof token issued by the web app's
+   * /api/auth/issue-link-token route. Without that requirement this
+   * endpoint would let anyone mint a session for any known email or
+   * provider id.
    */
   linkOAuth: publicProcedure
     .input(
       z.object({
-        id: z.string(),
+        id: z.string().min(1),
         name: z.string().nullable(),
-        email: z.string().nullable(),
+        email: z.string().email().nullable(),
         image: z.string().nullable(),
-        nextAuthProof: z.string().optional(),
+        nextAuthProof: z.string(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      // Verify NextAuth proof token if provided
-      if (input.nextAuthProof) {
-        const parts = input.nextAuthProof.split(".");
-        if (parts.length !== 2) throw new TRPCError({ code: "UNAUTHORIZED", message: "Invalid auth proof" });
-        const payload = parts[0];
-        const signature = parts[1];
-        const decodedPayload = Buffer.from(payload, "base64").toString();
-        const expectedSig = createHmac("sha256", process.env.NEXTAUTH_SECRET || "").update(decodedPayload).digest("hex");
-        if (signature !== expectedSig) throw new TRPCError({ code: "UNAUTHORIZED", message: "Invalid auth proof signature" });
-        const data = JSON.parse(decodedPayload);
-        if (data.exp < Math.floor(Date.now() / 1000)) throw new TRPCError({ code: "UNAUTHORIZED", message: "Auth proof expired" });
-        if (data.sub !== input.id) throw new TRPCError({ code: "FORBIDDEN", message: "User ID mismatch" });
+      const secret = process.env.NEXTAUTH_SECRET || "";
+      if (!secret) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Auth not configured" });
       }
 
-      // Find or create the user from the OAuth provider data
+      const parts = input.nextAuthProof.split(".");
+      if (parts.length !== 2) throw new TRPCError({ code: "UNAUTHORIZED", message: "Invalid auth proof" });
+      const decodedPayload = Buffer.from(parts[0], "base64").toString();
+
+      const expectedSig = createHmac("sha256", secret).update(decodedPayload).digest("hex");
+      const signatureBuf = Buffer.from(parts[1], "utf8");
+      const expectedBuf = Buffer.from(expectedSig, "utf8");
+      if (signatureBuf.length !== expectedBuf.length || !timingSafeEqual(signatureBuf, expectedBuf)) {
+        throw new TRPCError({ code: "UNAUTHORIZED", message: "Invalid auth proof signature" });
+      }
+
+      let proof: { sub?: string; email?: string | null; exp?: number };
+      try {
+        proof = JSON.parse(decodedPayload);
+      } catch {
+        throw new TRPCError({ code: "UNAUTHORIZED", message: "Malformed auth proof" });
+      }
+      if (typeof proof.exp !== "number" || proof.exp < Math.floor(Date.now() / 1000)) {
+        throw new TRPCError({ code: "UNAUTHORIZED", message: "Auth proof expired" });
+      }
+      // The proof must bind BOTH the provider id and the email being claimed,
+      // otherwise a valid proof for account A could be replayed against B's row.
+      if (proof.sub !== input.id || (proof.email ?? null) !== input.email) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Proof does not match submitted identity" });
+      }
+
+      // Identity is now verified. Find or create the user; the email lookup
+      // intentionally links OAuth sign-in onto an existing password account.
       let user = await ctx.prisma.user.findUnique({
         where: { id: input.id },
       });
 
-      if (!user) {
+      if (!user && input.email) {
         user = await ctx.prisma.user.findUnique({
-          where: { email: input.email ?? undefined },
+          where: { email: input.email },
         });
       }
 
@@ -150,7 +193,7 @@ export const authRouter = router({
       // Set httpOnly session cookie (mitigates XSS vector WR-07)
       setSessionCookie(ctx.res, sessionToken);
 
-      return { user, sessionToken };
+      return { user: publicUser(user) };
     }),
 
   getSession: protectedProcedure.query(({ ctx }) => {

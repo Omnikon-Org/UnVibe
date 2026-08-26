@@ -13,7 +13,6 @@
   "dependencies": {
     "@auth/prisma-adapter": "^1.6.0",
     "@prisma/client": "^5.12.1",
-    "@sentry/node": "^7.109.0",
     "@trpc/client": "^10.45.2",
     "@trpc/server": "^10.45.2",
     "@unvibe/types": "workspace:*",

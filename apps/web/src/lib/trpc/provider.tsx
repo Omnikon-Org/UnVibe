@@ -5,9 +5,6 @@ import { httpBatchLink, TRPCClientError } from "@trpc/client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { trpc } from "./client";
-import { useAuthStore } from "@/stores/auth-store";
-
-const SESSION_TOKEN_KEY = "unvibe_session_token";
 
 export function TRPCProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -28,10 +25,10 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
       }),
   );
 
-  const trpcUrl = process.env.NEXT_PUBLIC_API_URL
-    ? `${process.env.NEXT_PUBLIC_API_URL}/trpc`
-    : "/trpc";
-
+  // Always hit the same-origin /trpc proxy so the httpOnly session cookie
+  // rides along — direct calls to the API host cannot send SameSite=Strict
+  // cookies. The proxy destination is controlled by API_ORIGIN in
+  // next.config.mjs.
   const [trpcClient] = useState(() =>
     trpc.createClient({
       links: [
@@ -50,16 +47,7 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
             return observable;
           };
         },
-        httpBatchLink({
-          url: trpcUrl,
-          headers() {
-            // Read token from store first, fall back to localStorage for SSR hydration
-            const token =
-              useAuthStore.getState().sessionToken ??
-              (typeof window !== "undefined" ? localStorage.getItem(SESSION_TOKEN_KEY) : null);
-            return token ? { Authorization: `Bearer ${token}` } : {};
-          },
-        }),
+        httpBatchLink({ url: "/trpc" }),
       ],
     }),
   );

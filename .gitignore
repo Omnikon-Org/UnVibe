@@ -40,9 +40,6 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# Sentry
-.sentry-clirc
-
 # Python testing artifacts
 .pytest_cache/
 *.egg-info/
@@ -56,3 +53,5 @@ UI-*.md
 # OS files
 .DS_Store
 Thumbs.db
+.vercel
+.env*

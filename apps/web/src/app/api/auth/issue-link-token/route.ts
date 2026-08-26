@@ -8,7 +8,10 @@ export async function POST() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   // Create a signed token using a simple HMAC with NEXTAUTH_SECRET
-  const secret = process.env.NEXTAUTH_SECRET || "";
+  const secret = process.env.NEXTAUTH_SECRET;
+  if (!secret) {
+    return NextResponse.json({ error: "Auth not configured" }, { status: 500 });
+  }
   const payload = JSON.stringify({
     sub: session.user.id,
     email: session.user.email,
