@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "prisma generate && tsc",
+    "postinstall": "prisma generate",
     "test": "jest",
     "db:migrate": "prisma migrate dev",
     "db:seed": "prisma db seed",
