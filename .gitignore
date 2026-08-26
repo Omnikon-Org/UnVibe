@@ -55,3 +55,6 @@ UI-*.md
 Thumbs.db
 .vercel
 .env*
+
+# App logs
+*.log
