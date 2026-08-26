@@ -3,7 +3,7 @@
 **Read this file first.** It tells you what this project is, how it is shaped, what runs where, and which document to open next.
 
 **Handover date:** August 2026
-**Status:** The previous owner has abandoned the project and deleted all their API keys and deployments. **Every credential that ever existed for this project must be treated as compromised and rotated by you before going live.** See [`KNOWN-ISSUES-AND-HISTORY.md`](./KNOWN-ISSUES-AND-HISTORY.md) §5 before doing anything else.
+**Status:** The previous owner has abandoned the project and is **deleting every piece of infrastructure they owned**: all API keys, the Vercel deployment/project, the GitHub OAuth app, the Google Cloud Console project (consent screen + OAuth client), and the Neon database. **Nothing reusable survives — treat this repository as a cold start.** Follow [`SETUP-FROM-ZERO.md`](./SETUP-FROM-ZERO.md) top to bottom; ignore any reference to pre-existing projects or IDs. Additionally, **every credential that ever existed for this project must be treated as compromised and rotated by you before going live.** See [`KNOWN-ISSUES-AND-HISTORY.md`](./KNOWN-ISSUES-AND-HISTORY.md) §5 before doing anything else.
 
 ---
 
