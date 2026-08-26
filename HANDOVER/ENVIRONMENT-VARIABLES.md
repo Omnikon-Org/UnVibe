@@ -4,7 +4,7 @@
 
 > # ⚠️ THE ONE VARIABLE THAT BREAKS PRODUCTION SIGN-IN
 >
-> **`NEXTAUTH_URL` must equal your production domain in production** — e.g. `https://unvibe-omnikon.vercel.app` — **never `http://localhost:3000`.**
+> **`NEXTAUTH_URL` must equal your production domain in production** — e.g. `https://YOUR-DOMAIN.vercel.app` — **never `http://localhost:3000`.**
 > NextAuth builds OAuth redirect URIs from this value; a localhost value deployed to Vercel makes GitHub reject callbacks ("redirect_uri is not associated with this application") and Google return `400 redirect_uri_mismatch` with `redirect_uri=http://localhost:3000/api/auth/callback/google`. This exact failure happened in August 2026 and took down production sign-in on both providers. Full story: [`KNOWN-ISSUES-AND-HISTORY.md` §1](./KNOWN-ISSUES-AND-HISTORY.md).
 > Local value stays `http://localhost:3000`; set them separately per environment.
 
@@ -27,7 +27,7 @@
 |------|------------------------------|---------------|-------------------|------------------------|
 | `DATABASE_URL` | `apps/web/prisma/schema.prisma` (`url = env("DATABASE_URL")`); consumed by `src/server/prisma.ts` singleton | Neon console → Connection Details ([SETUP §2](./SETUP-FROM-ZERO.md)) | Pooled Neon string, `sslmode=require` | Same string (Vercel↔Neon over TCP works fine); rotate password during handover! |
 | `NEXTAUTH_SECRET` | `apps/web/src/app/api/auth/issue-link-token/route.ts` (HMAC signing), `src/server/routers/auth.ts` (proof verification), and internally by next-auth v5 as session-secret fallback | Generate: `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"` | random base64 string | A **different** random string. Must be present or you get the "Configuration" error page. |
-| `NEXTAUTH_URL` | Read implicitly by next-auth v5 (`trustHost: true` is set in `src/auth.ts`, but an explicit URL wins and drives provider callback construction) | Your deployment URL | `http://localhost:3000` | `https://unvibe-omnikon.vercel.app` (**must match the deployed origin exactly** — see warning above) |
+| `NEXTAUTH_URL` | Read implicitly by next-auth v5 (`trustHost: true` is set in `src/auth.ts`, but an explicit URL wins and drives provider callback construction) | Your deployment URL | `http://localhost:3000` | `https://YOUR-DOMAIN.vercel.app` (**must match the deployed origin exactly** — see warning above) |
 | `GITHUB_CLIENT_ID` | `src/auth.ts` line 17 | GitHub → https://github.com/settings/developers (classic OAuth App) or https://github.com/settings/apps (GitHub App, IDs starting `Ov23li`) — [SETUP §4](./SETUP-FROM-ZERO.md) | same client id as prod | same |
 | `GITHUB_CLIENT_SECRET` | `src/auth.ts` line 18 | Generated once at app creation; regenerate if lost/exposed | secret | **New secret** (old one is compromised — incident log §5) |
 | `GOOGLE_CLIENT_ID` | `src/auth.ts` line 21 | Google Cloud Console → APIs & Services → Credentials → OAuth client ID — [SETUP §5](./SETUP-FROM-ZERO.md) | same client id as prod | same |
@@ -91,7 +91,7 @@ Verified by grep: **zero** references in `apps/web/src`. They exist purely as pl
 ```text
 DATABASE_URL        = postgresql://...neon.tech/neondb?sslmode=require
 NEXTAUTH_SECRET     = <fresh-random-base64>
-NEXTAUTH_URL        = https://unvibe-omnikon.vercel.app
+NEXTAUTH_URL        = https://YOUR-DOMAIN.vercel.app
 GITHUB_CLIENT_ID    = <from github.com/settings/developers>
 GITHUB_CLIENT_SECRET= <freshly generated>
 GOOGLE_CLIENT_ID    = <from console.cloud.google.com>

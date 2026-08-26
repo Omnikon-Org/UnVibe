@@ -8,7 +8,6 @@ UnVibe is an open-source AI-powered learning platform that trains developers to 
 
 ## Live Demo
 
-[![Live Demo](https://img.shields.io/badge/DEMO-https://unvibe--omnikon--vercel.app-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://unvibe-omnikon.vercel.app)
 
 The application is deployed with:
 - Frontend: Vercel (main branch)

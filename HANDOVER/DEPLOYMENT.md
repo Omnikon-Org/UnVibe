@@ -1,6 +1,8 @@
 # Deployment (Vercel)
 
-Target platform is **Vercel**, project name **`un-vibe-web`**, production domain **https://unvibe-omnikon.vercel.app**. The app is a single Next.js deployment — UI and tRPC API ship together. There is no other hosting (Render was removed entirely).
+Target platform is **Vercel**, project name — **any name you choose**, production domain **https://YOUR-DOMAIN.vercel.app**. The app is a single Next.js deployment — UI and tRPC API ship together. There is no other hosting (Render was removed entirely).
+
+> Wherever you see `YOUR-DOMAIN.vercel.app` in this documentation, substitute the domain Vercel actually assigns you (Project → Settings → Domains) — then use that exact origin as `NEXTAUTH_URL` and in both OAuth consoles.
 
 Repo evidence of the previous setup:
 
@@ -28,7 +30,7 @@ Repo evidence of the previous setup:
 
 1. Push the repo to a GitHub account/repo **you** control.
 2. Go to **https://vercel.com/new** → select your repo → at the *Configure Project* step apply **exactly** the settings in §2 → **Deploy** (it will fail without env vars — that's fine, add them next per §2.2 then redeploy).
-3. If the default `.vercel.app` domain differs from `unvibe-omnikon.vercel.app`, either rename the project to `un-vibe-web` (Settings → General → Project Name) or update `NEXTAUTH_URL` and both OAuth consoles to match whatever domain you actually get. **The three must always agree:** deployed origin = `NEXTAUTH_URL` = registered callback URLs.
+3. If the default `.vercel.app` domain differs from `YOUR-DOMAIN.vercel.app`, either rename the project (Settings → General → Project Name) or update `NEXTAUTH_URL` and both OAuth consoles to match whatever domain you actually get. **The three must always agree:** deployed origin = `NEXTAUTH_URL` = registered callback URLs.
 
 > **Duplicate-project trap (real incident):** there was once a confusing second Vercel project named `unvibe-omnikon` alongside the real `un-vibe-web`; it has been deleted. Whenever operating via CLI, run `npx vercel link` and verify it points at **`un-vibe-web`** *before* changing env vars or deploying — otherwise you edit the wrong project's config. (`npx vercel project ls` lists what your token can see.)
 
@@ -57,7 +59,7 @@ Add all of the following in **Settings → Environment Variables**, enabled for 
 ```text
 DATABASE_URL
 NEXTAUTH_SECRET
-NEXTAUTH_URL              ← https://unvibe-omnikon.vercel.app  (NOT localhost!)
+NEXTAUTH_URL              ← https://YOUR-DOMAIN.vercel.app  (NOT localhost!)
 GITHUB_CLIENT_ID
 GITHUB_CLIENT_SECRET
 GOOGLE_CLIENT_ID
@@ -94,9 +96,9 @@ If a git-push deployment shows **CANCELED** even though nothing superseded it �
 
 Run through ALL of these after every fresh environment-variable change:
 
-1. ☐ **Providers endpoint** — open `https://unvibe-omnikon.vercel.app/api/auth/providers`
+1. ☐ **Providers endpoint** — open `https://YOUR-DOMAIN.vercel.app/api/auth/providers`
    Expect JSON containing **both** `github` and `google` objects with `signin`/`callback` URLs. `{}` means provider creds missing/not loaded.
-2. ☐ **tRPC health** — open `https://unvibe-omnikon.vercel.app/api/trpc/health`
+2. ☐ **tRPC health** — open `https://YOUR-DOMAIN.vercel.app/api/trpc/health`
    Expect JSON containing `"status":"ok"` (plus timestamp; envelope formatting may vary by client). Defined in `apps/web/src/server/router.ts`.
 3. ☐ **Real GitHub sign-in** — go to `/auth/signin` → Continue with GitHub → authorize → must land back on `/app/dashboard` signed-in.
 4. ☐ **Real Google sign-in** — same via Continue with Google. Watch specifically for Google's `400 redirect_uri_mismatch` (means console registration ≠ deployed origin — see §5.2).
@@ -123,8 +125,8 @@ The deployed app is sending a callback URL the provider doesn't have registered.
 
 1. `NEXTAUTH_URL` wrong in production → fix env var → **redeploy**.
 2. Provider consoles never had the production callbacks registered → register exactly:
-   - GitHub: `https://unvibe-omnikon.vercel.app/api/auth/callback/github`
-   - Google origins: `https://unvibe-omnikon.vercel.app`; redirects: `https://unvibe-omnikon.vercel.app/api/auth/callback/google`
+   - GitHub: `https://YOUR-DOMAIN.vercel.app/api/auth/callback/github`
+   - Google origins: `https://YOUR-DOMAIN.vercel.app`; redirects: `https://YOUR-DOMAIN.vercel.app/api/auth/callback/google`
    
    (Keep the localhost counterparts too.) Exact-string rules and console walkthroughs: [`SETUP-FROM-ZERO.md` §4–5](./SETUP-FROM-ZERO.md).
 

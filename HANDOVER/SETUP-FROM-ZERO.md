@@ -4,7 +4,7 @@
 
 Every external service must be provisioned by you. This document walks each one in dependency order, then boots the app locally. Production deployment is covered separately in [`DEPLOYMENT.md`](./DEPLOYMENT.md).
 
-> **Golden rule while following this doc:** register **both** `http://localhost:3000/...` and `https://unvibe-omnikon.vercel.app/...` callback URLs in every OAuth console *now*, even if you only care about local dev today. The August-2026 incident log shows that forgetting production callbacks caused a full sign-in outage ([`KNOWN-ISSUES-AND-HISTORY.md` §1](./KNOWN-ISSUES-AND-HISTORY.md)).
+> **Golden rule while following this doc:** register **both** `http://localhost:3000/...` and `https://YOUR-DOMAIN.vercel.app/...` callback URLs in every OAuth console *now*, even if you only care about local dev today. The August-2026 incident log shows that forgetting production callbacks caused a full sign-in outage ([`KNOWN-ISSUES-AND-HISTORY.md` §1](./KNOWN-ISSUES-AND-HISTORY.md)).
 
 ---
 
@@ -137,10 +137,10 @@ Two variants exist. Pick **one**; either works with the code unchanged (`apps/we
 1. Go to **https://github.com/settings/developers** → **OAuth Apps** → **New OAuth App** (or "Register a new application").
 2. Fill in:
    - **Application name:** `UnVibe` (anything)
-   - **Homepage URL:** `https://unvibe-omnikon.vercel.app`
+   - **Homepage URL:** `https://YOUR-DOMAIN.vercel.app`
    - **Authorization callback URL:** you need *both* production and localhost registered:
      ```text
-     https://unvibe-omnikon.vercel.app/api/auth/callback/github
+     https://YOUR-DOMAIN.vercel.app/api/auth/callback/github
      http://localhost:3000/api/auth/callback/github
      ```
      Exact strings, **no trailing slash**, scheme included.
@@ -187,12 +187,12 @@ Full walkthrough; the resulting client id/secret feed `GOOGLE_CLIENT_ID` / `GOOG
    - Application type: **Web application**, Name: `UnVibe web`.
    - **Authorized JavaScript origins** — add BOTH:
      ```text
-     https://unvibe-omnikon.vercel.app
+     https://YOUR-DOMAIN.vercel.app
      http://localhost:3000
      ```
    - **Authorized redirect URIs** — add BOTH (exact paths, no trailing slash):
      ```text
-     https://unvibe-omnikon.vercel.app/api/auth/callback/google
+     https://YOUR-DOMAIN.vercel.app/api/auth/callback/google
      http://localhost:3000/api/auth/callback/google
      ```
    - **Create**.

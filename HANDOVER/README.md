@@ -24,8 +24,8 @@ There is exactly **one deployable application**: a Next.js app that serves *both
 ```text
                         ┌────────────────────────────────────────────────────────┐
                         │                    Vercel                              │
-                        │        Project: un-vibe-web                            │
-                        │   https://unvibe-omnikon.vercel.app                    │
+                        │        Project: <your-project-name>                            │
+                        │   https://YOUR-DOMAIN.vercel.app                    │
                         │   Root Directory: apps/web (Next.js 14 App Router)     │
                         │                                                        │
   Browser ──HTTPS──────▶│  ┌──────────────────────────────────────────────────┐  │
@@ -110,7 +110,7 @@ src/
 
 | Concern | Local development | Production |
 |---------|-------------------|------------|
-| Web app + API | `next dev` at `http://localhost:3000` (run via `pnpm dev` from repo root) | Vercel project **un-vibe-web** → https://unvibe-omnikon.vercel.app |
+| Web app + API | `next dev` at `http://localhost:3000` (run via `pnpm dev` from repo root) | your Vercel project → https://YOUR-DOMAIN.vercel.app |
 | Database | Neon PostgreSQL (your own project) over TCP 5432 | Same Neon project |
 | OAuth providers | GitHub + Google apps configured with localhost callbacks | Same provider apps need production callback URLs registered too |
 | LLM calls | OpenRouter API (needs `OPENROUTER_API_KEY`) | Same |
