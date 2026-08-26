@@ -2,20 +2,17 @@
  * AI service client — calls OpenRouter directly via the LLM service.
  *
  * Previously proxied through the Python AI service (FastAPI). Now calls
- * OpenRouter natively, eliminating the need for a separate deployment.
- *
- * The public interface (types and method signatures) is unchanged, so all
- * existing consumers (tRPC routers, etc.) work without modification.
+ * OpenRouter natively — there is no separate AI deployment to run.
  */
 
-import { llm, LLMClientError } from "./llm";
+import { llm } from "./llm";
 import { renderPrompt, stripMarkdownFence } from "./prompts";
 import pino from "pino";
 
 const logger = pino({ name: "ai-client" });
 
 // ---------------------------------------------------------------------------
-// Types (unchanged from original interface)
+// Types
 // ---------------------------------------------------------------------------
 
 export interface GenerateCodeParams {
@@ -133,7 +130,7 @@ export class AIClient {
       return {
         code,
         language: params.language,
-        modelUsed: llm["model"],
+        modelUsed: llm.modelId,
         tokenCount: Math.max(1, Math.floor(code.length / 4)),
       };
     } catch (err) {
@@ -211,13 +208,8 @@ export class AIClient {
   }
 
   async diffCode(params: DiffParams): Promise<DiffResult> {
-    // For non-Python languages, use simple text-based similarity
-    if (params.language !== "python") {
-      return this.fallbackTextDiff(params.originalCode, params.updatedCode);
-    }
-
-    // For Python, use a simple text-based comparison
-    // (Full AST analysis requires Python — we do text-based for now)
+    // Text-based similarity scoring for all languages.
+    // (Full AST analysis requires a Python runtime — see apps/ai-service.)
     return this.fallbackTextDiff(params.originalCode, params.updatedCode);
   }
 

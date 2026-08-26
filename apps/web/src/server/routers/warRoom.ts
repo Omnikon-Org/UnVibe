@@ -12,13 +12,11 @@ export const warRoomRouter = router({
     return room ?? null;
   }),
 
-  getMessages: publicProcedure
-    .input(z.object({ roomId: z.string().optional() }).optional())
-    .query(async ({ ctx, input }) => {
-      // Messages are handled via Socket.io currently
-      // Return empty array as placeholder — real-time via socket
-      return [];
-    }),
+  getMessages: publicProcedure.query(async () => {
+    // Real-time messaging was handled via Socket.io on the old Express API;
+    // it returns an empty array until real-time is reintroduced.
+    return [];
+  }),
 
   getLeaderboard: publicProcedure.query(async ({ ctx }) => {
     return getLeaderboard(ctx.prisma, 20);
@@ -29,7 +27,6 @@ export const warRoomRouter = router({
       where: { id: input.roomId },
     });
     if (!room) throw new TRPCError({ code: "NOT_FOUND", message: "Room not found" });
-    // Socket.io handles the actual join — this is a REST-style check
     return { room, success: true };
   }),
 });

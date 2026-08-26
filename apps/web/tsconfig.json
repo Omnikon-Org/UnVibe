@@ -18,8 +18,7 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"],
-      "@unvibe/api": ["../../apps/api/src/router.ts"]
+      "@/*": ["./src/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

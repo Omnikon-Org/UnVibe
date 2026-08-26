@@ -25,10 +25,8 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
       }),
   );
 
-  // Always hit the same-origin /trpc proxy so the httpOnly session cookie
-  // rides along — direct calls to the API host cannot send SameSite=Strict
-  // cookies. The proxy destination is controlled by API_ORIGIN in
-  // next.config.mjs.
+  // Hit this app's own /api/trpc route handler so the httpOnly session
+  // cookie rides along — no cross-origin calls, no tokens in localStorage.
   const [trpcClient] = useState(() =>
     trpc.createClient({
       links: [
@@ -47,7 +45,7 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
             return observable;
           };
         },
-        httpBatchLink({ url: "/trpc" }),
+        httpBatchLink({ url: "/api/trpc" }),
       ],
     }),
   );

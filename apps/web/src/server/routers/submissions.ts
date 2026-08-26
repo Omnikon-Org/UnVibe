@@ -2,6 +2,7 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, router } from "../trpc";
 import pino from "pino";
+import { gradeSubmission } from "../services/grader";
 
 const logger = pino({ name: "submissions-router" });
 
@@ -18,10 +19,10 @@ export const submissionsRouter = router({
       const userId = ctx.session.user.id;
 
       // Verify module exists
-      const module = await ctx.prisma.module.findUnique({
+      const mod = await ctx.prisma.module.findUnique({
         where: { id: input.moduleId },
       });
-      if (!module) throw new TRPCError({ code: "NOT_FOUND", message: "Module not found" });
+      if (!mod) throw new TRPCError({ code: "NOT_FOUND", message: "Module not found" });
 
       // Check for existing pending submission
       const existingPending = await ctx.prisma.submission.findFirst({
@@ -41,27 +42,26 @@ export const submissionsRouter = router({
         },
       });
 
-      // Enqueue to BullMQ for async scoring — best-effort, clean up on failure
-      if (ctx.submissionQueue) {
-        try {
-          await ctx.submissionQueue.add("process-submission", {
-            submissionId: submission.id,
-            userId,
-            moduleId: input.moduleId,
-            code: input.code,
-            originalCode: input.originalCode ?? module.content,
-            language: "typescript",
-          });
-        } catch (err) {
-          // Queue failed — submission remains as pending orphan
-          logger.error({ err, submissionId: submission.id }, "Failed to enqueue submission");
-        }
+      // Grade inline — serverless deployments have no background worker.
+      let status = submission.status;
+      try {
+        const updated = await gradeSubmission(ctx.prisma, {
+          submissionId: submission.id,
+          userId,
+          moduleId: input.moduleId,
+          code: input.code,
+          originalCode: input.originalCode ?? mod.content,
+          language: "typescript",
+        });
+        status = updated.status;
+      } catch (err) {
+        logger.error({ err, submissionId: submission.id }, "Inline grading failed");
       }
 
       return {
         id: submission.id,
-        status: submission.status,
-        queued: ctx.submissionQueue !== null,
+        status,
+        queued: false,
       };
     }),
 

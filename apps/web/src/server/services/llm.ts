@@ -1,7 +1,6 @@
 /**
  * Universal LLM client using OpenRouter's unified API.
  *
- * Ports the Python AI service's llm_client.py directly into the Express API.
  * Uses the OpenAI SDK pointed at OpenRouter's base URL.
  */
 
@@ -47,6 +46,10 @@ export class LLMClient {
 
   get hasKey(): boolean {
     return Boolean(this.apiKey) && !this.apiKey.startsWith("sk-or-v1-placeholder");
+  }
+
+  get modelId(): string {
+    return this.model;
   }
 
   private ensureClient(): OpenAI {
@@ -99,14 +102,14 @@ export class LLMClient {
         });
 
         const text = response.choices[0]?.message?.content ?? "";
-          logger.info(
-            {
-              model: this.model,
-              promptTokens: response.usage?.prompt_tokens ?? "unknown",
-              completionTokens: response.usage?.completion_tokens ?? "unknown",
-            },
-            "LLM API success",
-          );
+        logger.info(
+          {
+            model: this.model,
+            promptTokens: response.usage?.prompt_tokens ?? "unknown",
+            completionTokens: response.usage?.completion_tokens ?? "unknown",
+          },
+          "LLM API success",
+        );
         return text;
       } catch (err) {
         lastError = err instanceof Error ? err : new Error(String(err));
@@ -123,7 +126,7 @@ export class LLMClient {
           logger.warn({ error: (err as Error).message, wait, attempt: attempt + 1 }, "LLM API error, retrying");
           await new Promise((r) => setTimeout(r, wait));
         } else if (!(err instanceof OpenAI.APIError)) {
-          logger.error({ error: lastError.message }, "Unexpected LLM client error");
+          logger.error({ error: lastError?.message }, "Unexpected LLM client error");
           break;
         }
       }

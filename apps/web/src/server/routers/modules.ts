@@ -2,16 +2,17 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { publicProcedure, protectedProcedure, router } from "../trpc";
 import pino from "pino";
+import { gradeSubmission } from "../services/grader";
 
 const logger = pino({ name: "modules-router" });
 
 export const modulesRouter = router({
   getById: publicProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
-    const module = await ctx.prisma.module.findUnique({
+    const mod = await ctx.prisma.module.findUnique({
       where: { id: input.id },
     });
-    if (!module) throw new TRPCError({ code: "NOT_FOUND", message: "Module not found" });
-    return module;
+    if (!mod) throw new TRPCError({ code: "NOT_FOUND", message: "Module not found" });
+    return mod;
   }),
 
   getByTrack: publicProcedure.input(z.object({ trackId: z.string() })).query(async ({ ctx, input }) => {
@@ -31,10 +32,10 @@ export const modulesRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       // Fetch module content for comparison
-      const module = await ctx.prisma.module.findUnique({
+      const mod = await ctx.prisma.module.findUnique({
         where: { id: input.moduleId },
       });
-      if (!module) throw new TRPCError({ code: "NOT_FOUND", message: "Module not found" });
+      if (!mod) throw new TRPCError({ code: "NOT_FOUND", message: "Module not found" });
 
       // Check for existing pending submission
       const existingPending = await ctx.prisma.submission.findFirst({
@@ -54,23 +55,22 @@ export const modulesRouter = router({
         },
       });
 
-      // Enqueue to BullMQ if the queue is available — best-effort
-      if (ctx.submissionQueue) {
-        try {
-          await ctx.submissionQueue.add("process-submission", {
-            submissionId: submission.id,
-            userId: ctx.session.user.id,
-            moduleId: input.moduleId,
-            code: input.code,
-            originalCode: module.content,
-          });
-        } catch (err) {
-          // Queue failed — submission remains as pending orphan
-          logger.error({ err, submissionId: submission.id }, "Failed to enqueue submission");
-        }
+      // Grade inline — serverless deployments have no background worker.
+      let status = submission.status;
+      try {
+        const updated = await gradeSubmission(ctx.prisma, {
+          submissionId: submission.id,
+          userId: ctx.session.user.id,
+          moduleId: input.moduleId,
+          code: input.code,
+          originalCode: mod.content,
+        });
+        status = updated.status;
+      } catch (err) {
+        logger.error({ err, submissionId: submission.id }, "Inline grading failed");
       }
 
-      return { submissionId: submission.id, status: submission.status };
+      return { submissionId: submission.id, status };
     }),
 
   getProgress: protectedProcedure.input(z.object({ moduleId: z.string() })).query(async ({ ctx, input }) => {

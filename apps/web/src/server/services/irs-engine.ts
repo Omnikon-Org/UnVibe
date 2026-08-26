@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import type { PrismaClient } from "@prisma/client";
 
 export interface IRSResult {
   score: number;
@@ -13,7 +13,7 @@ export interface IRSResult {
  * Calculate the IRS (Individual Readiness Score) for a user.
  *
  * Aggregates all scored submissions and computes the average.
- * Used by both the submission worker and the manual recalculate endpoint.
+ * Used by the submission grader and the manual recalculate endpoint.
  */
 export async function calculateIRS(prisma: PrismaClient, userId: string): Promise<IRSResult> {
   const submissions = await prisma.submission.findMany({

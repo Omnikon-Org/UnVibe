@@ -20,9 +20,9 @@ interface AuthStore {
   restoreSession: () => void;
 }
 
-// Requests always go through the same-origin /trpc proxy so the httpOnly
+// Requests go to this app's own /api/trpc route handler so the httpOnly
 // session cookie authenticates them — no session token is stored client-side.
-const API_URL = "/trpc";
+const API_URL = "/api/trpc";
 
 const SESSION_CACHE_KEY = "unvibe_user_cache";
 

@@ -119,13 +119,10 @@ See `.env.example` for complete configuration options including:
 
 | Component | Platform | Branch |
 |-----------|----------|--------|
-| Frontend | Vercel | main |
-| Backend API | Render | main |
-| AI Service | Render | main |
-| Database | Upstash PostgreSQL | — |
-| Cache | Upstash Redis | — |
+| Web app + API (single Next.js deployment) | Vercel | main |
+| Database | Neon PostgreSQL | — |
 
-Changes merged to `main` trigger automatic deployment via GitHub Actions.
+Changes merged to `main` trigger automatic deployment.
 
 ---
 

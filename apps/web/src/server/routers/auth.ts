@@ -3,7 +3,6 @@ import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { TRPCError } from "@trpc/server";
 import { publicProcedure, protectedProcedure, router } from "../trpc";
-import { setSessionCookie, clearSessionCookie } from "../context";
 
 function generateSessionToken(): string {
   return randomBytes(32).toString("hex");
@@ -62,8 +61,8 @@ export const authRouter = router({
         },
       });
 
-      // Set httpOnly session cookie (mitigates XSS vector WR-07)
-      setSessionCookie(ctx.res, sessionToken);
+      // Set httpOnly session cookie via the response cookie jar
+      ctx.setSessionCookie(sessionToken);
 
       return { user: publicUser(user) };
     }),
@@ -100,8 +99,8 @@ export const authRouter = router({
         },
       });
 
-      // Set httpOnly session cookie (mitigates XSS vector WR-07)
-      setSessionCookie(ctx.res, sessionToken);
+      // Set httpOnly session cookie via the response cookie jar
+      ctx.setSessionCookie(sessionToken);
 
       return { user: publicUser(user) };
     }),
@@ -109,12 +108,11 @@ export const authRouter = router({
   /**
    * Creates a DB session for an OAuth-authenticated user.
    * Called by the web app after NextAuth OAuth completes,
-   * bridging the OAuth session to the Express API's session system.
+   * bridging the NextAuth JWT session to the app's DB session system.
    *
-   * REQUIRES a signed proof token issued by the web app's
-   * /api/auth/issue-link-token route. Without that requirement this
-   * endpoint would let anyone mint a session for any known email or
-   * provider id.
+   * REQUIRES a signed proof token issued by /api/auth/issue-link-token.
+   * Without that requirement this endpoint would let anyone mint a session
+   * for any known email or provider id.
    */
   linkOAuth: publicProcedure
     .input(
@@ -190,8 +188,8 @@ export const authRouter = router({
         },
       });
 
-      // Set httpOnly session cookie (mitigates XSS vector WR-07)
-      setSessionCookie(ctx.res, sessionToken);
+      // Set httpOnly session cookie via the response cookie jar
+      ctx.setSessionCookie(sessionToken);
 
       return { user: publicUser(user) };
     }),
@@ -207,7 +205,7 @@ export const authRouter = router({
       });
     }
     // Clear the httpOnly session cookie
-    clearSessionCookie(ctx.res);
+    ctx.clearSessionCookie();
     return { success: true };
   }),
 });

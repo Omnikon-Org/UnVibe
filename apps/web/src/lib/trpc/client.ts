@@ -1,15 +1,12 @@
 import { createTRPCReact } from "@trpc/react-query";
-import type { AppRouter } from "@unvibe/api";
+import type { AppRouter } from "@/server/router";
 
 /**
- * tRPC client for the UnVibe API.
+ * tRPC client for the UnVibe API (served by this same app at /api/trpc).
  *
- * Infers the full router type from the API package via the @unvibe/api
- * tsconfig path alias. As the API router grows in Phase 2/3, the client
- * automatically gains access to new procedures with full type safety.
- *
- * Usage in client components:
- *   import { trpc } from "@/lib/trpc/client";
- *   const { data } = trpc.health.useQuery();
+ * Infers the full router type from the server router via a type-only import,
+ * so the client automatically gains access to new procedures with full type
+ * safety as the router grows. Type-only imports are erased at build time —
+ * no server code is bundled into the client.
  */
 export const trpc = createTRPCReact<AppRouter>();

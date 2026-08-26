@@ -12,7 +12,7 @@ export const judge0Router = router({
         stdin: z.string().optional(),
       }),
     )
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ input }) => {
       const languageId = LANGUAGE_IDS[input.language];
       if (!languageId) {
         throw new TRPCError({

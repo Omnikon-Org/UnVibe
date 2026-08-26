@@ -4,7 +4,7 @@ import type { Context, Session } from "./context";
 
 // ---------------------------------------------------------------------------
 // tRPC initialisation — typed against Context so every procedure has full
-// type-safe access to prisma, logger, io, submissionQueue, and session.
+// type-safe access to prisma, session, and the cookie helpers.
 // ---------------------------------------------------------------------------
 export const t = initTRPC.context<Context>().create({
   errorFormatter({ shape, error }) {
@@ -25,7 +25,6 @@ export const router = t.router;
 export const middleware = t.middleware;
 export const mergeRouters = t.mergeRouters;
 export const createCallerFactory = t.createCallerFactory;
-export const routerFactory = t.router;
 
 // ---------------------------------------------------------------------------
 // Public procedure — no auth required
@@ -47,7 +46,6 @@ const isAuthenticated = t.middleware(({ ctx, next }) => {
     });
   }
 
-  // Re-pass ctx with session narrowed to non-null for type safety in procedures
   return next({
     ctx: {
       ...ctx,
